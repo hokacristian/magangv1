@@ -43,6 +43,8 @@ Route::get('/rekening/saldo/{id}', function ($id) {
 // Middleware untuk role: pengeluaran
 Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':pengeluaran'])->group(function () {
     Route::get('/pengeluaran/dashboard', [PengeluaranController::class, 'index'])->name('pengeluaran.dashboard');
+    Route::post('/pengeluaran/store', [PengeluaranController::class, 'store'])->name('pengeluaran.store'); // Tambahkan rute ini untuk pengeluaran
+    Route::post('/pengeluaran/update-status/{id}', [PengeluaranController::class, 'updateStatus'])->name('pengeluaran.updateStatus'); // Tambahkan rute ini untuk update status pengeluaran
 });
 
 require __DIR__ . '/auth.php';

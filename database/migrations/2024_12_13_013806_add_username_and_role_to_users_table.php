@@ -10,18 +10,20 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up()
-{
-    Schema::table('users', function (Blueprint $table) {
-        $table->string('username')->unique()->after('id');
-        $table->string('role')->after('email');
-    });
-}
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('username')->unique()->after('id');
+            $table->string('role')->after('email');
+        });
+    }
 
-public function down()
-{
-    Schema::table('users', function (Blueprint $table) {
-        $table->dropColumn(['username', 'role']);
-    });
-}
-
+    /**
+     * Reverse the migrations.
+     */
+    public function down()
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['username', 'role']);
+        });
+    }
 };
