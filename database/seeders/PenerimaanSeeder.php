@@ -16,22 +16,23 @@ class PenerimaanSeeder extends Seeder
     {
         $penerimaans = [
             [
-                'rekening_id' => 1, // ID rekening terkait
+                'rekening_id' => 1,
+                'bulan' => 'Desember',
                 'saldo_awal' => 5000000.00,
                 'penerimaan' => 2000000.00,
-                'saldo_akhir' => 7000000.00,
                 'keterangan' => 'Setoran bulanan',
                 'status' => 'Sudah Disahkan',
             ],
             [
                 'rekening_id' => 2,
+                'bulan' => 'November',
                 'saldo_awal' => 3000000.00,
                 'penerimaan' => 1000000.00,
-                'saldo_akhir' => 4000000.00,
                 'keterangan' => 'Dana donasi',
                 'status' => 'Belum Disahkan',
             ],
         ];
+        
 
         foreach ($penerimaans as $penerimaan) {
             Penerimaan::create($penerimaan);
