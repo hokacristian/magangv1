@@ -1,27 +1,38 @@
 <?php
 
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\DirekturController;
+use App\Http\Controllers\KatimController;
 use App\Http\Controllers\PenerimaanController;
 use App\Http\Controllers\PengeluaranController;
-use App\Http\Controllers\KatimController;
-use App\Http\Controllers\DirekturController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::middleware(['auth', 'role:penerimaan'])->group(function () {
-    Route::get('/penerimaan', [PenerimaanController::class, 'index'])->name('penerimaan.index');
+Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':direktur'])->group(function () {
+    Route::get('/direktur/dashboard', [DirekturController::class, 'index'])->name('direktur.dashboard');
 });
 
-Route::middleware(['auth', 'role:pengeluaran'])->group(function () {
-    Route::get('/pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran.index');
+// Middleware untuk role: katim
+Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':katim'])->group(function () {
+    Route::get('/katim/dashboard', [KatimController::class, 'index'])->name('katim.dashboard');
 });
 
-Route::middleware(['auth', 'role:katim'])->group(function () {
-    Route::get('/katim', [KatimController::class, 'index'])->name('katim.index');
+// Middleware untuk role: penerimaan
+Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':penerimaan'])->group(function () {
+    Route::get('/penerimaan/dashboard', [PenerimaanController::class, 'index'])->name('penerimaan.dashboard');
 });
 
-Route::middleware(['auth', 'role:direktur'])->group(function () {
-    Route::get('/direktur', [DirekturController::class, 'index'])->name('direktur.index');
+// Middleware untuk role: pengeluaran
+Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':pengeluaran'])->group(function () {
+    Route::get('/pengeluaran/dashboard', [PengeluaranController::class, 'index'])->name('pengeluaran.dashboard');
 });
+
+require __DIR__.'/auth.php';
