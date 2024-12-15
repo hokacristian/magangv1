@@ -101,6 +101,29 @@
             </form>
         </div>
 
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#rekening_id').change(function () {
+                const rekeningId = $(this).val();
+                if (rekeningId) {
+                    $.ajax({
+                        url: '/rekening/saldo/' + rekeningId,
+                        type: 'GET',
+                        success: function (data) {
+                            $('#saldo_saat_ini').text(data.saldo_saat_ini.toLocaleString('id-ID'));
+                        },
+                        error: function () {
+                            alert('Gagal mendapatkan saldo rekening.');
+                        }
+                    });
+                } else {
+                    $('#saldo_saat_ini').text('0');
+                }
+            });
+        });
+    </script>
+
         <!-- Riwayat Pengeluaran -->
         <div class="bg-white shadow-md rounded-lg p-6 mb-8">
             <h2 class="text-xl font-bold mb-4">Riwayat Pengeluaran</h2>
@@ -123,7 +146,13 @@
                             <td class="py-2 px-4">{{ $pengeluaran->rekening->rekening }} - {{ $pengeluaran->rekening->bank }}</td>
                             <td class="py-2 px-4">{{ number_format($pengeluaran->saldo_awal, 2) }}</td>
                             <td class="py-2 px-4">{{ number_format($pengeluaran->jumlah_pengeluaran, 2) }}</td>
-                            <td class="py-2 px-4">{{ number_format($pengeluaran->saldo_akhir, 2) }}</td>
+                            <td class="py-2 px-4">
+                                @if ($pengeluaran->status === 'Sudah Disahkan')
+                                    {{ number_format($pengeluaran->saldo_akhir, 2) }}
+                                @else
+                                    {{ number_format($pengeluaran->saldo_awal, 2) }}
+                                @endif
+                            </td>
                             <td class="py-2 px-4">{{ $pengeluaran->keterangan }}</td>
                             <td class="py-2 px-4">
                                 <form action="{{ route('pengeluaran.updateStatus', $pengeluaran->id) }}" method="POST">
@@ -139,7 +168,34 @@
                 </tbody>
             </table>
         </div>
-
+<!-- BELUM DISAHKAN -->
+<div class="bg-white shadow-md rounded-lg p-6 mb-8">
+    <h2 class="text-xl font-bold mb-4 text-red-600">Belum Disahkan</h2>
+    <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <thead class="bg-gray-200 text-gray-600">
+            <tr>
+                <th class="py-2 px-4">Bulan</th>
+                <th class="py-2 px-4">Rekening</th>
+                <th class="py-2 px-4">Saldo Awal</th>
+                <th class="py-2 px-4">Jumlah Pengeluaran</th>
+                <th class="py-2 px-4">Keterangan</th>
+                <th class="py-2 px-4">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($belumDisahkan as $data)
+                <tr class="border-t border-gray-200">
+                    <td class="py-2 px-4">{{ $data->bulan }}</td>
+                    <td class="py-2 px-4">{{ $data->rekening->rekening }} - {{ $data->rekening->bank }}</td>
+                    <td class="py-2 px-4">{{ number_format($data->saldo_awal, 2) }}</td>
+                    <td class="py-2 px-4">{{ number_format($data->jumlah_pengeluaran, 2) }}</td>
+                    <td class="py-2 px-4">{{ $data->keterangan }}</td>
+                    <td class="py-2 px-4">{{ $data->status }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
     </div>
 
     <!-- SweetAlert2 Toast -->
@@ -172,6 +228,8 @@
             @endif
         });
     </script>
+
+
 
 </body>
 </html>

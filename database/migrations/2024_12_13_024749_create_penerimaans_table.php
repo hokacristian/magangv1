@@ -13,17 +13,16 @@ return new class extends Migration
 {
     Schema::create('penerimaans', function (Blueprint $table) {
         $table->id();
-        $table->unsignedBigInteger('rekening_id'); // Relasi ke tabel rekening
-        $table->decimal('saldo_awal', 15, 2)->default(0); // Saldo awal
-        $table->decimal('penerimaan', 15, 2)->default(0); // Penerimaan
-        $table->decimal('saldo_akhir', 15, 2)->default(0); // Saldo akhir
-        $table->string('keterangan')->nullable(); // Keterangan penerimaan
-        $table->string('status')->default('Belum Disahkan'); // Status penerimaan
+        $table->unsignedBigInteger('rekening_id');
+        $table->string('bulan');
+        $table->decimal('penerimaan', 15, 2);
+        $table->string('keterangan')->nullable();
+        $table->string('status')->default('Belum Disahkan');
         $table->timestamps();
-
-        // Foreign key untuk relasi dengan tabel rekening
+    
         $table->foreign('rekening_id')->references('id')->on('rekenings')->onDelete('cascade');
     });
+    
 }
 
 

@@ -9,110 +9,69 @@ use Illuminate\Http\Request;
 class PenerimaanController extends Controller
 {
     public function index()
-{
-    $rekenings = Rekening::all();
+    {
+        $rekenings = Rekening::all();
+        $penerimaans = Penerimaan::with('rekening')->orderBy('created_at', 'asc')->get();
 
-    // Ambil data penerimaan terurut berdasarkan waktu input
-    $penerimaans = Penerimaan::with('rekening')->orderBy('created_at', 'asc')->get();
+        $belumDisahkan = $penerimaans->where('status', 'Belum Disahkan');
+        $sudahDisahkan = $penerimaans->where('status', 'Sudah Disahkan');
 
-    // Filter data berdasarkan status
-    $belumDisahkan = $penerimaans->where('status', 'Belum Disahkan');
-    $sudahDisahkan = $penerimaans->where('status', 'Sudah Disahkan');
-
-    // Hitung saldo akhir secara berurutan berdasarkan saldo awal dan penerimaan
-    $saldoCache = [];
-foreach ($penerimaans as $penerimaan) {
-    $rekeningId = $penerimaan->rekening_id;
-
-    // Inisialisasi saldo awal jika belum ada
-    if (!isset($saldoCache[$rekeningId])) {
-        $saldoCache[$rekeningId] = 0;
+        return view('dashboard.penerimaan', compact('rekenings', 'penerimaans', 'belumDisahkan', 'sudahDisahkan'));
     }
 
-    // Set saldo awal dari cache
-    $penerimaan->saldo_awal = $saldoCache[$rekeningId];
-
-    // Hitung saldo akhir hanya jika status adalah "Sudah Disahkan"
-    if ($penerimaan->status === 'Sudah Disahkan') {
-        $penerimaan->saldo_akhir = $saldoCache[$rekeningId] + $penerimaan->penerimaan;
-        $saldoCache[$rekeningId] = $penerimaan->saldo_akhir; // Update saldo akhir ke cache
-    } else {
-        $penerimaan->saldo_akhir = $penerimaan->saldo_awal; // Tidak berubah jika belum disahkan
-    }
-}
-
-
-    return view('dashboard.penerimaan', compact('rekenings', 'penerimaans', 'belumDisahkan', 'sudahDisahkan'));
-}
-
-
-
-
-public function store(Request $request)
-{
-    $request->validate([
-        'rekening_id' => 'required|exists:rekenings,id',
-        'bulan' => 'required|string',
-        'penerimaan' => 'required|numeric|min:0',
-        'keterangan' => 'required|string',
-        'status' => 'required|string|in:Sudah Disahkan,Belum Disahkan',
-    ]);
-
-    $rekening = Rekening::findOrFail($request->rekening_id);
-
-    // Gunakan transaksi untuk konsistensi data
-    \DB::transaction(function () use ($request, $rekening) {
-        $saldo_awal = $rekening->saldo_saat_ini;
-
-        // Buat data penerimaan
-        $penerimaan = Penerimaan::create([
-            'rekening_id' => $request->rekening_id,
-            'bulan' => $request->bulan,
-            'saldo_awal' => $saldo_awal,
-            'penerimaan' => $request->penerimaan,
-            'keterangan' => $request->keterangan,
-            'status' => $request->status,
+    public function store(Request $request)
+    {
+        $request->validate([
+            'rekening_id' => 'required|exists:rekenings,id',
+            'bulan' => 'required|string',
+            'penerimaan' => 'required|numeric|min:0',
+            'keterangan' => 'required|string',
+            'status' => 'required|string|in:Sudah Disahkan,Belum Disahkan',
         ]);
 
-        // Perbarui saldo rekening hanya jika status "Sudah Disahkan"
-        if ($request->status === 'Sudah Disahkan') {
-            $saldo_akhir = $saldo_awal + $request->penerimaan;
-            $rekening->update(['saldo_saat_ini' => $saldo_akhir]);
-        }
-    });
+        $rekening = Rekening::findOrFail($request->rekening_id);
 
-    // Tambahkan pesan sukses
-    return redirect()->route('penerimaan.dashboard')->with('success', 'Data penerimaan berhasil disimpan!');
-}
+        \DB::transaction(function () use ($request, $rekening) {
+            $saldo_awal = $rekening->saldo_saat_ini;
 
+            $penerimaan = Penerimaan::create([
+                'rekening_id' => $request->rekening_id,
+                'bulan' => $request->bulan,
+                'saldo_awal' => $saldo_awal,
+                'penerimaan' => $request->penerimaan,
+                'saldo_akhir' => $saldo_awal + $request->penerimaan,
+                'keterangan' => $request->keterangan,
+                'status' => $request->status,
+            ]);
 
-public function updateStatus(Request $request, $id)
-{
-    $request->validate([
-        'status' => 'required|string|in:Sudah Disahkan,Belum Disahkan',
-    ]);
+            if ($request->status === 'Sudah Disahkan') {
+                $rekening->tambahSaldo($request->penerimaan);
+            }
+        });
 
-    $penerimaan = Penerimaan::findOrFail($id);
-    $rekening = Rekening::findOrFail($penerimaan->rekening_id);
+        return redirect()->route('penerimaan.dashboard')->with('success', 'Data penerimaan berhasil disimpan!');
+    }
 
-    \DB::transaction(function () use ($request, $penerimaan, $rekening) {
-        if ($request->status === 'Sudah Disahkan' && $penerimaan->status === 'Belum Disahkan') {
-            // Update saldo rekening
-            $saldo_akhir = $rekening->saldo_saat_ini + $penerimaan->penerimaan;
-            $rekening->update(['saldo_saat_ini' => $saldo_akhir]);
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|string|in:Sudah Disahkan,Belum Disahkan',
+        ]);
 
-            // Tambahkan saldo akhir pada penerimaan
-            $penerimaan->saldo_akhir = $saldo_akhir;
-        }
+        $penerimaan = Penerimaan::findOrFail($id);
+        $rekening = Rekening::findOrFail($penerimaan->rekening_id);
 
-        $penerimaan->status = $request->status;
-        $penerimaan->save();
-    });
+        \DB::transaction(function () use ($request, $penerimaan, $rekening) {
+            if ($request->status === 'Sudah Disahkan' && $penerimaan->status === 'Belum Disahkan') {
+                $rekening->tambahSaldo($penerimaan->penerimaan);
+            } elseif ($request->status === 'Belum Disahkan' && $penerimaan->status === 'Sudah Disahkan') {
+                $rekening->kurangiSaldo($penerimaan->penerimaan);
+            }
 
-    // Tambahkan pesan sukses
-    return redirect()->route('penerimaan.dashboard')->with('success', 'Status berhasil diperbarui!');
-}
+            $penerimaan->status = $request->status;
+            $penerimaan->save();
+        });
 
-
-
+        return redirect()->route('penerimaan.dashboard')->with('success', 'Status berhasil diperbarui!');
+    }
 }

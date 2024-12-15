@@ -9,88 +9,69 @@ use Illuminate\Http\Request;
 class PengeluaranController extends Controller
 {
     public function index()
-{
-    $rekenings = Rekening::all();
+    {
+        $rekenings = Rekening::all();
+        $pengeluarans = Pengeluaran::with('rekening')->orderBy('created_at', 'asc')->get();
 
-    // Ambil data pengeluaran terurut berdasarkan waktu input
-    $pengeluarans = Pengeluaran::with('rekening')->orderBy('created_at', 'asc')->get();
+        $belumDisahkan = $pengeluarans->where('status', 'Belum Disahkan');
+        $sudahDisahkan = $pengeluarans->where('status', 'Sudah Disahkan');
 
-    // Filter data berdasarkan status
-    $belumDisahkan = $pengeluarans->where('status', 'Belum Disahkan');
-    $sudahDisahkan = $pengeluarans->where('status', 'Sudah Disahkan');
-
-    // Hitung saldo akhir secara berurutan
-    $saldoCache = [];
-    foreach ($pengeluarans as $pengeluaran) {
-        $rekeningId = $pengeluaran->rekening_id;
-
-        // Inisialisasi saldo awal jika belum ada
-        if (!isset($saldoCache[$rekeningId])) {
-            $saldoCache[$rekeningId] = Rekening::find($rekeningId)->saldo_saat_ini;
-        }
-
-        // Set saldo awal dari cache
-        $pengeluaran->saldo_awal = $saldoCache[$rekeningId];
-
-        // Hitung saldo akhir hanya jika status adalah "Sudah Disahkan"
-        if ($pengeluaran->status === 'Sudah Disahkan') {
-            $pengeluaran->saldo_akhir = $saldoCache[$rekeningId] - $pengeluaran->jumlah_pengeluaran;
-            $saldoCache[$rekeningId] = $pengeluaran->saldo_akhir; // Update saldo akhir ke cache
-        } else {
-            $pengeluaran->saldo_akhir = $pengeluaran->saldo_awal; // Tidak berubah jika belum disahkan
-        }
+        return view('dashboard.pengeluaran', compact('rekenings', 'pengeluarans', 'belumDisahkan', 'sudahDisahkan'));
     }
-
-    return view('dashboard.pengeluaran', compact('rekenings', 'pengeluarans', 'belumDisahkan', 'sudahDisahkan'));
-}
-
 
     public function store(Request $request)
-{
-    $rekening = Rekening::findOrFail($request->rekening_id);
+    {
+        $request->validate([
+            'rekening_id' => 'required|exists:rekenings,id',
+            'bulan' => 'required|string',
+            'jumlah_pengeluaran' => 'required|numeric|min:0',
+            'keterangan' => 'required|string',
+            'status' => 'required|string|in:Sudah Disahkan,Belum Disahkan',
+        ]);
 
-    $saldo_awal = $rekening->saldo_saat_ini; // Ambil saldo saat ini
+        $rekening = Rekening::findOrFail($request->rekening_id);
 
-    // Buat data pengeluaran
-    $pengeluaran = Pengeluaran::create([
-        'rekening_id' => $request->rekening_id,
-        'bulan' => $request->bulan,
-        'saldo_awal' => $saldo_awal,
-        'jumlah_pengeluaran' => $request->jumlah_pengeluaran,
-        'keterangan' => $request->keterangan,
-        'status' => $request->status,
-        'saldo_akhir' => $request->status === 'Sudah Disahkan' ? $saldo_awal - $request->jumlah_pengeluaran : $saldo_awal,
-    ]);
+        \DB::transaction(function () use ($request, $rekening) {
+            $saldo_awal = $rekening->saldo_saat_ini;
 
-    // Perbarui saldo rekening hanya jika status "Sudah Disahkan"
-    if ($request->status === 'Sudah Disahkan') {
-        $saldo_akhir = $saldo_awal - $request->jumlah_pengeluaran;
-        $rekening->update(['saldo_saat_ini' => $saldo_akhir]);
+            $pengeluaran = Pengeluaran::create([
+                'rekening_id' => $request->rekening_id,
+                'bulan' => $request->bulan,
+                'saldo_awal' => $saldo_awal,
+                'jumlah_pengeluaran' => $request->jumlah_pengeluaran,
+                'saldo_akhir' => $saldo_awal - $request->jumlah_pengeluaran,
+                'keterangan' => $request->keterangan,
+                'status' => $request->status,
+            ]);
+
+            if ($request->status === 'Sudah Disahkan') {
+                $rekening->kurangiSaldo($request->jumlah_pengeluaran);
+            }
+        });
+
+        return redirect()->route('pengeluaran.dashboard')->with('success', 'Data pengeluaran berhasil disimpan!');
     }
 
-    return redirect()->route('pengeluaran.dashboard')->with('success', 'Data pengeluaran berhasil disimpan!');
-}
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|string|in:Sudah Disahkan,Belum Disahkan',
+        ]);
 
+        $pengeluaran = Pengeluaran::findOrFail($id);
+        $rekening = Rekening::findOrFail($pengeluaran->rekening_id);
 
-public function updateStatus(Request $request, $id)
-{
-    $pengeluaran = Pengeluaran::findOrFail($id);
-    $rekening = Rekening::findOrFail($pengeluaran->rekening_id);
+        \DB::transaction(function () use ($request, $pengeluaran, $rekening) {
+            if ($request->status === 'Sudah Disahkan' && $pengeluaran->status === 'Belum Disahkan') {
+                $rekening->kurangiSaldo($pengeluaran->jumlah_pengeluaran);
+            } elseif ($request->status === 'Belum Disahkan' && $pengeluaran->status === 'Sudah Disahkan') {
+                $rekening->tambahSaldo($pengeluaran->jumlah_pengeluaran);
+            }
 
-    if ($request->status === 'Sudah Disahkan' && $pengeluaran->status === 'Belum Disahkan') {
-        // Update saldo rekening
-        $saldo_akhir = $rekening->saldo_saat_ini - $pengeluaran->jumlah_pengeluaran;
-        $rekening->update(['saldo_saat_ini' => $saldo_akhir]);
+            $pengeluaran->status = $request->status;
+            $pengeluaran->save();
+        });
 
-        // Perbarui saldo akhir pada pengeluaran
-        $pengeluaran->saldo_akhir = $saldo_akhir;
+        return redirect()->route('pengeluaran.dashboard')->with('success', 'Status berhasil diperbarui!');
     }
-
-    $pengeluaran->status = $request->status;
-    $pengeluaran->save();
-
-    return redirect()->route('pengeluaran.dashboard')->with('success', 'Status berhasil diperbarui!');
-}
-
-
 }

@@ -118,26 +118,33 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($penerimaans as $penerimaan)
-                        <tr class="border-t border-gray-200">
-                            <td class="py-2 px-4">{{ $penerimaan->bulan }}</td>
-                            <td class="py-2 px-4">{{ $penerimaan->rekening->rekening }} - {{ $penerimaan->rekening->bank }}</td>
-                            <td class="py-2 px-4">{{ number_format($penerimaan->saldo_awal, 2) }}</td>
-                            <td class="py-2 px-4">{{ number_format($penerimaan->penerimaan, 2) }}</td>
-                            <td class="py-2 px-4">{{ number_format($penerimaan->saldo_akhir, 2) }}</td>
-                            <td class="py-2 px-4">{{ $penerimaan->keterangan }}</td>
-                            <td class="py-2 px-4">
-                                <form action="{{ route('penerimaan.updateStatus', $penerimaan->id) }}" method="POST">
-                                    @csrf
-                                    <select name="status" onchange="this.form.submit()" class="bg-gray-100 rounded p-1">
-                                        <option value="Sudah Disahkan" {{ $penerimaan->status === 'Sudah Disahkan' ? 'selected' : '' }}>Sudah Disahkan</option>
-                                        <option value="Belum Disahkan" {{ $penerimaan->status === 'Belum Disahkan' ? 'selected' : '' }}>Belum Disahkan</option>
-                                    </select>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
+    @foreach($penerimaans as $penerimaan)
+        <tr class="border-t border-gray-200">
+            <td class="py-2 px-4">{{ $penerimaan->bulan }}</td>
+            <td class="py-2 px-4">{{ $penerimaan->rekening->rekening }} - {{ $penerimaan->rekening->bank }}</td>
+            <td class="py-2 px-4">{{ number_format($penerimaan->saldo_awal, 2) }}</td>
+            <td class="py-2 px-4">{{ number_format($penerimaan->penerimaan, 2) }}</td>
+            <td class="py-2 px-4">
+                @if ($penerimaan->status === 'Sudah Disahkan')
+                    {{ number_format($penerimaan->saldo_akhir, 2) }}
+                @else
+                    {{ number_format($penerimaan->saldo_awal, 2) }}
+                @endif
+            </td>
+            <td class="py-2 px-4">{{ $penerimaan->keterangan }}</td>
+            <td class="py-2 px-4">
+                <form action="{{ route('penerimaan.updateStatus', $penerimaan->id) }}" method="POST">
+                    @csrf
+                    <select name="status" onchange="this.form.submit()" class="bg-gray-100 rounded p-1">
+                        <option value="Sudah Disahkan" {{ $penerimaan->status === 'Sudah Disahkan' ? 'selected' : '' }}>Sudah Disahkan</option>
+                        <option value="Belum Disahkan" {{ $penerimaan->status === 'Belum Disahkan' ? 'selected' : '' }}>Belum Disahkan</option>
+                    </select>
+                </form>
+            </td>
+        </tr>
+    @endforeach
+</tbody>
+
             </table>
         </div>
                 <!-- Belum Disahkan -->
@@ -215,6 +222,29 @@
         document.addEventListener('click', function () {
             if (!profileDropdown.classList.contains('hidden')) {
                 profileDropdown.classList.add('hidden');
+            }
+        });
+    });
+</script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#rekening_id').change(function () {
+            const rekeningId = $(this).val();
+            if (rekeningId) {
+                $.ajax({
+                    url: '/rekening/saldo/' + rekeningId,
+                    type: 'GET',
+                    success: function (data) {
+                        $('#saldo_saat_ini').text(data.saldo_saat_ini.toLocaleString('id-ID'));
+                    },
+                    error: function () {
+                        alert('Gagal mendapatkan saldo rekening.');
+                    }
+                });
+            } else {
+                $('#saldo_saat_ini').text('0');
             }
         });
     });
