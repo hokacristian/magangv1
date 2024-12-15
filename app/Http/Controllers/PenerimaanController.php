@@ -8,15 +8,46 @@ use Illuminate\Http\Request;
 
 class PenerimaanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // Filter request
+        $bulan = $request->get('bulan', 'Januari');
+        $status = $request->get('status', 'Sudah Disahkan');
+
+        // Ambil semua data rekening
         $rekenings = Rekening::all();
-        $penerimaans = Penerimaan::with('rekening')->orderBy('created_at', 'asc')->get();
 
+        // Ambil data penerimaan
+        $penerimaans = Penerimaan::with('rekening')->get();
+
+        // Data berdasarkan filter
+        $filteredData = Penerimaan::with('rekening')
+            ->where('bulan', $bulan)
+            ->where('status', $status)
+            ->get();
+
+        // Filter "Belum Disahkan"
         $belumDisahkan = $penerimaans->where('status', 'Belum Disahkan');
-        $sudahDisahkan = $penerimaans->where('status', 'Sudah Disahkan');
 
-        return view('dashboard.penerimaan', compact('rekenings', 'penerimaans', 'belumDisahkan', 'sudahDisahkan'));
+        // Hitung total pendapatan
+        $totalPendapatan = $filteredData->sum('penerimaan');
+
+        // Jika request AJAX untuk filter
+        if ($request->ajax()) {
+            return response()->json([
+                'filteredData' => $filteredData->map(function ($item) {
+                    return [
+                        'bulan' => $item->bulan,
+                        'rekening' => $item->rekening->rekening . ' - ' . $item->rekening->bank,
+                        'penerimaan' => $item->penerimaan,
+                    ];
+                }),
+                'totalPendapatan' => $totalPendapatan
+            ]);
+        }
+
+        // Return ke view
+        return view('dashboard.penerimaan', compact('rekenings', 'penerimaans', 'belumDisahkan', 'totalPendapatan'));
     }
 
     public function store(Request $request)

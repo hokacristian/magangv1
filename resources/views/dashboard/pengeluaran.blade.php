@@ -198,6 +198,89 @@
 </div>
     </div>
 
+<!-- Total Pengeluaran -->
+<div class="mt-4">
+    <h3 class="text-lg font-bold">Total Pengeluaran: Rp <span id="totalPengeluaran">{{ number_format($totalPengeluaran, 2) }}</span></h3>
+</div>
+
+<!-- Filter untuk Total Pengeluaran -->
+<div class="mb-4">
+    <form id="filterForm">
+        <label for="bulanFilter">Bulan:</label>
+        <select name="bulan" id="bulanFilter" class="border rounded p-2">
+            @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $month)
+                <option value="{{ $month }}">{{ $month }}</option>
+            @endforeach
+        </select>
+
+        <label for="statusFilter">Status:</label>
+        <select name="status" id="statusFilter" class="border rounded p-2">
+            <option value="Sudah Disahkan">Sudah Disahkan</option>
+            <option value="Belum Disahkan">Belum Disahkan</option>
+        </select>
+    </form>
+</div>
+
+<!-- Tabel Total Pengeluaran (dengan filter) -->
+<div id="filteredTable" class="bg-white shadow-md rounded-lg p-6">
+    <h3 class="text-lg font-bold mb-4">Data Total Berdasarkan Filter</h3>
+    <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+        <thead class="bg-gray-200">
+            <tr>
+                <th>Bulan</th>
+                <th>Rekening</th>
+                <th>Pengeluaran</th>
+            </tr>
+        </thead>
+        <tbody id="filteredTableBody">
+            <!-- Konten akan diperbarui melalui AJAX -->
+        </tbody>
+    </table>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Fungsi untuk memperbarui tabel total pengeluaran
+        function updateTotalPengeluaran() {
+            let bulan = $('#bulanFilter').val();
+            let status = $('#statusFilter').val();
+
+            $.ajax({
+                url: "{{ route('pengeluaran.dashboard') }}", // Pastikan URL ini mengarah ke route pengeluaran
+                method: "GET",
+                data: { bulan: bulan, status: status },
+                success: function (response) {
+                    $('#filteredTableBody').empty(); // Kosongkan tabel
+                    $('#totalPengeluaran').text(response.totalPengeluaran.toLocaleString('id-ID')); // Update total
+
+                    // Masukkan data baru ke tabel filteredTable
+                    response.filteredData.forEach(function (item) {
+                        $('#filteredTableBody').append(`
+                            <tr>
+                                <td>${item.bulan}</td>
+                                <td>${item.rekening}</td>
+                                <td>${item.jumlah_pengeluaran.toLocaleString('id-ID')}</td>
+                            </tr>
+                        `);
+                    });
+                },
+                error: function () {
+                    alert('Gagal memuat data!');
+                }
+            });
+        }
+
+        // Event listener untuk filter dropdown
+        $('#bulanFilter, #statusFilter').change(updateTotalPengeluaran);
+
+        // Panggil fungsi pertama kali
+        updateTotalPengeluaran();
+    });
+</script>
+
+
+
     <!-- SweetAlert2 Toast -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
