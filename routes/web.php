@@ -19,6 +19,14 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name
 // Middleware untuk role: direktur
 Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':direktur'])->group(function () {
     Route::get('/direktur/dashboard', [DirekturController::class, 'index'])->name('direktur.dashboard');
+
+});
+
+// Middleware untuk role: direktur
+Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':direktur'])->group(function () {
+    Route::get('/direktur/dashboard', [DirekturController::class, 'index'])->name('direktur.dashboard');
+    Route::get('/direktur/download-pdf', [DirekturController::class, 'downloadPDF'])
+        ->name('direktur.download-pdf');
 });
 
 // Middleware untuk role: katim
@@ -46,5 +54,6 @@ Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':pengelu
     Route::post('/pengeluaran/store', [PengeluaranController::class, 'store'])->name('pengeluaran.store'); // Tambahkan rute ini untuk pengeluaran
     Route::post('/pengeluaran/update-status/{id}', [PengeluaranController::class, 'updateStatus'])->name('pengeluaran.updateStatus'); // Tambahkan rute ini untuk update status pengeluaran
 });
+
 
 require __DIR__ . '/auth.php';
