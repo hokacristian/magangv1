@@ -101,43 +101,69 @@
                 </button>
             </form>
         </div>
-
+        <div class="mb-4">
+            <label for="filterBulanRiwayat" class="block text-sm font-medium text-gray-700">Filter Berdasarkan Bulan:</label>
+            <select id="filterBulanRiwayat" class="mt-1 block w-full md:w-1/3 p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Semua Bulan</option>
+                @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $bulan)
+                    <option value="{{ $bulan }}">{{ $bulan }}</option>
+                @endforeach
+            </select>
+        </div>
         <!-- Riwayat Penerimaan -->
-        <div class="bg-white shadow-md rounded-lg p-6 mb-8">
-            <h2 class="text-xl font-bold mb-4">Riwayat Penerimaan</h2>
-            <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
-                <thead class="bg-gray-200 text-gray-600">
-                    <tr>
-                        <th class="py-2 px-4">Bulan</th>
-                        <th class="py-2 px-4">Rekening</th>
-                        <th class="py-2 px-4">Saldo Awal</th>
-                        <th class="py-2 px-4">Penerimaan</th>
-                        <th class="py-2 px-4">Saldo Akhir</th>
-                        <th class="py-2 px-4">Keterangan</th>
-                        <th class="py-2 px-4">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-    @foreach($penerimaans as $penerimaan)
-        <tr class="border-t border-gray-200">
-            <td class="py-2 px-4">{{ $penerimaan->bulan }}</td>
-            <td class="py-2 px-4">{{ $penerimaan->rekening->rekening }} - {{ $penerimaan->rekening->bank }}</td>
-            <td class="py-2 px-4">{{ number_format($penerimaan->saldo_awal, 2) }}</td>
-            <td class="py-2 px-4">{{ number_format($penerimaan->penerimaan, 2) }}</td>
-            <td class="py-2 px-4">
-                @if ($penerimaan->status === 'Sudah Disahkan')
-                    {{ number_format($penerimaan->saldo_akhir, 2) }}
-                @else
-                    {{ number_format($penerimaan->saldo_awal, 2) }}
-                @endif
-            </td>
-            <td class="py-2 px-4">{{ $penerimaan->keterangan }}</td>
-            <td class="py-2 px-4">
-                <form action="{{ route('penerimaan.updateStatus', $penerimaan->id) }}" method="POST">
-                    @csrf
-                    <select name="status" onchange="this.form.submit()" class="bg-gray-100 rounded p-1">
-                        <option value="Sudah Disahkan" {{ $penerimaan->status === 'Sudah Disahkan' ? 'selected' : '' }}>Sudah Disahkan</option>
-                        <option value="Belum Disahkan" {{ $penerimaan->status === 'Belum Disahkan' ? 'selected' : '' }}>Belum Disahkan</option>
+                <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+                    <h2 class="text-xl font-bold mb-4">Riwayat Penerimaan</h2>
+                    <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+                        <thead class="bg-gray-200 text-gray-600">
+                            <tr>
+                                <th class="py-2 px-4">Bulan</th>
+                                <th class="py-2 px-4">Rekening</th>
+                                <th class="py-2 px-4">Saldo Awal</th>
+                                <th class="py-2 px-4">Penerimaan</th>
+                                <th class="py-2 px-4">Saldo Akhir</th>
+                                <th class="py-2 px-4">Keterangan</th>
+                                <th class="py-2 px-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="riwayatPenerimaanBody">
+                    @foreach($penerimaans as $penerimaan)
+                        <tr class="border-t border-gray-200" data-bulan="{{ $penerimaan->bulan }}">
+                            <td class="py-2 px-4">{{ $penerimaan->bulan }}</td>
+                            <td class="py-2 px-4">{{ $penerimaan->rekening->rekening }} - {{ $penerimaan->rekening->bank }}</td>
+                            <td class="py-2 px-4">{{ number_format($penerimaan->saldo_awal, 2) }}</td>
+                            <td class="py-2 px-4">{{ number_format($penerimaan->penerimaan, 2) }}</td>
+                            <td class="py-2 px-4">
+                                @if ($penerimaan->status === 'Sudah Disahkan')
+                                    {{ number_format($penerimaan->saldo_akhir, 2) }}
+                                @else
+                                    {{ number_format($penerimaan->saldo_awal, 2) }}
+                                @endif
+                            </td>
+                            <td class="py-2 px-4">{{ $penerimaan->keterangan }}</td>
+                    <td class="py-2 px-4">
+            <form action="{{ route('penerimaan.updateStatus', $penerimaan->id) }}" method="POST">
+                @csrf
+                <select 
+                    name="status" 
+                    onchange="this.form.submit()" 
+                    class="rounded p-1 focus:outline-none focus:ring-2 
+                        @if ($penerimaan->status === 'Sudah Disahkan') 
+                            bg-green-500 text-white 
+                        @else 
+                            bg-red-500 text-white 
+                        @endif">
+                    <option 
+                        value="Sudah Disahkan" 
+                        {{ $penerimaan->status === 'Sudah Disahkan' ? 'selected' : '' }}
+                        class="text-white bg-green-500">
+                        Sudah Disahkan
+                    </option>
+                    <option 
+                        value="Belum Disahkan" 
+                        {{ $penerimaan->status === 'Belum Disahkan' ? 'selected' : '' }}
+                        class="text-white bg-red-500">
+                        Belum Disahkan
+                    </option>
                     </select>
                 </form>
             </td>
@@ -175,47 +201,58 @@
                 </tbody>
             </table>
         </div>
+        <!-- Total Penerimaan -->
+<div class="mt-8">
+    <div class="bg-blue-600 text-white p-6 rounded-lg shadow-md flex justify-between items-center">
+        <div>
+            <h3 class="text-lg font-bold">Total Penerimaan</h3>
+            <p class="text-2xl font-semibold">Rp <span id="totalPendapatan">{{ number_format($totalPendapatan, 2) }}</span></p>
+        </div>
     </div>
 </div>
 
-<!-- Total Penerimaan -->
-<div class="mt-4">
-    <h3 class="text-lg font-bold">Total Penerimaan: Rp <span id="totalPendapatan">{{ number_format($totalPendapatan, 2) }}</span></h3>
-</div>
-
 <!-- Filter untuk Total Penerimaan -->
-<div class="mb-4">
-    <form id="filterForm">
-        <label for="bulanFilter">Bulan:</label>
-        <select name="bulan" id="bulanFilter" class="border rounded p-2">
-            @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $month)
-                <option value="{{ $month }}">{{ $month }}</option>
-            @endforeach
-        </select>
-
-        <label for="statusFilter">Status:</label>
-        <select name="status" id="statusFilter" class="border rounded p-2">
-            <option value="Sudah Disahkan">Sudah Disahkan</option>
-            <option value="Belum Disahkan">Belum Disahkan</option>
-        </select>
+<div class="mt-6 bg-white p-6 rounded-lg shadow-md">
+    <h3 class="text-lg font-bold mb-4">Filter Data Penerimaan</h3>
+    <form id="filterForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+            <label for="bulanFilter" class="block text-sm font-medium text-gray-700">Bulan:</label>
+            <select name="bulan" id="bulanFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <option value="" disabled selected>Pilih Bulan</option>
+                @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $month)
+                    <option value="{{ $month }}">{{ $month }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label for="statusFilter" class="block text-sm font-medium text-gray-700">Status:</label>
+            <select name="status" id="statusFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <option value="" disabled selected>Pilih Status</option>
+                <option value="Sudah Disahkan">Sudah Disahkan</option>
+                <option value="Belum Disahkan">Belum Disahkan</option>
+            </select>
+        </div>
+    
     </form>
 </div>
 
-<!-- Tabel Total Penerimaan (dengan filter) -->
-<div id="filteredTable" class="bg-white shadow-md rounded-lg p-6">
-    <h3 class="text-lg font-bold mb-4">Data Total Berdasarkan Filter</h3>
-    <table class="min-w-full bg-white border border-gray-200 rounded-lg">
-        <thead class="bg-gray-200">
+<!-- Tabel Total Penerimaan -->
+<div id="filteredTable" class="mt-6 bg-white p-6 rounded-lg shadow-md">
+    <h3 class="text-lg font-bold mb-4">Data Penerimaan Berdasarkan Filter</h3>
+    <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <thead class="bg-gray-200 text-gray-600">
             <tr>
-                <th>Bulan</th>
-                <th>Rekening</th>
-                <th>Penerimaan</th>
+                <th class="py-2 px-4 text-left border-b border-gray-300">Bulan</th>
+                <th class="py-2 px-4 text-left border-b border-gray-300">Rekening</th>
+                <th class="py-2 px-4 text-left border-b border-gray-300">Penerimaan</th>
             </tr>
         </thead>
-        <tbody id="filteredTableBody">
+        <tbody id="filteredTableBody" class="divide-y divide-gray-200">
             <!-- Konten akan diperbarui melalui AJAX -->
         </tbody>
     </table>
+</div>
+    </div>
 </div>
 
 
@@ -330,6 +367,27 @@
             } else {
                 $('#saldo_saat_ini').text('0');
             }
+        });
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterBulanRiwayat = document.getElementById('filterBulanRiwayat');
+        const riwayatRows = document.querySelectorAll('#riwayatPenerimaanBody tr');
+
+        // Event Listener untuk filter bulan
+        filterBulanRiwayat.addEventListener('change', function () {
+            const selectedBulan = filterBulanRiwayat.value;
+
+            riwayatRows.forEach(row => {
+                const rowBulan = row.getAttribute('data-bulan');
+
+                if (selectedBulan === '' || rowBulan === selectedBulan) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
         });
     });
 </script>
