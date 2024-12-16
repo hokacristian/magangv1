@@ -123,11 +123,20 @@
             });
         });
     </script>
+    <div class="mb-4">
+        <label for="filterBulan" class="block text-sm font-medium text-gray-700">Filter Berdasarkan Bulan:</label>
+        <select id="filterBulan" class="mt-1 block w-full md:w-1/3 p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            <option value="">Semua Bulan</option>
+            @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $bulan)
+                <option value="{{ $bulan }}">{{ $bulan }}</option>
+            @endforeach
+        </select>
+    </div>
 
         <!-- Riwayat Pengeluaran -->
         <div class="bg-white shadow-md rounded-lg p-6 mb-8">
             <h2 class="text-xl font-bold mb-4">Riwayat Pengeluaran</h2>
-            <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden" id="pengeluaranTable">
                 <thead class="bg-gray-200 text-gray-600">
                     <tr>
                         <th class="py-2 px-4">Bulan</th>
@@ -141,7 +150,7 @@
                 </thead>
                 <tbody>
                     @foreach($pengeluarans as $pengeluaran)
-                        <tr class="border-t border-gray-200">
+                        <tr class="border-t border-gray-200" data-bulan="{{ $pengeluaran->bulan }}">
                             <td class="py-2 px-4">{{ $pengeluaran->bulan }}</td>
                             <td class="py-2 px-4">{{ $pengeluaran->rekening->rekening }} - {{ $pengeluaran->rekening->bank }}</td>
                             <td class="py-2 px-4">{{ number_format($pengeluaran->saldo_awal, 2) }}</td>
@@ -155,13 +164,31 @@
                             </td>
                             <td class="py-2 px-4">{{ $pengeluaran->keterangan }}</td>
                             <td class="py-2 px-4">
-                                <form action="{{ route('pengeluaran.updateStatus', $pengeluaran->id) }}" method="POST">
-                                    @csrf
-                                    <select name="status" onchange="this.form.submit()" class="bg-gray-100 rounded p-1">
-                                        <option value="Sudah Disahkan" {{ $pengeluaran->status === 'Sudah Disahkan' ? 'selected' : '' }}>Sudah Disahkan</option>
-                                        <option value="Belum Disahkan" {{ $pengeluaran->status === 'Belum Disahkan' ? 'selected' : '' }}>Belum Disahkan</option>
-                                    </select>
-                                </form>
+                            <form action="{{ route('pengeluaran.updateStatus', $pengeluaran->id) }}" method="POST">
+                @csrf
+                <select 
+                    name="status" 
+                    onchange="this.form.submit()" 
+                    class="rounded p-1 focus:outline-none focus:ring-2 
+                        @if ($pengeluaran->status === 'Sudah Disahkan') 
+                            bg-green-500 text-white 
+                        @else 
+                            bg-red-500 text-white 
+                        @endif">
+                    <option 
+                        value="Sudah Disahkan" 
+                        {{ $pengeluaran->status === 'Sudah Disahkan' ? 'selected' : '' }}
+                        class="text-white bg-green-500">
+                        Sudah Disahkan
+                    </option>
+                    <option 
+                        value="Belum Disahkan" 
+                        {{ $pengeluaran->status === 'Belum Disahkan' ? 'selected' : '' }}
+                        class="text-white bg-red-500">
+                        Belum Disahkan
+                    </option>
+                    </select>
+                </form>
                             </td>
                         </tr>
                     @endforeach
@@ -169,74 +196,83 @@
             </table>
         </div>
 <!-- BELUM DISAHKAN -->
-<div class="bg-white shadow-md rounded-lg p-6 mb-8">
-    <h2 class="text-xl font-bold mb-4 text-red-600">Belum Disahkan</h2>
-    <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <thead class="bg-gray-200 text-gray-600">
-            <tr>
-                <th class="py-2 px-4">Bulan</th>
-                <th class="py-2 px-4">Rekening</th>
-                <th class="py-2 px-4">Saldo Awal</th>
-                <th class="py-2 px-4">Jumlah Pengeluaran</th>
-                <th class="py-2 px-4">Keterangan</th>
-                <th class="py-2 px-4">Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($belumDisahkan as $data)
-                <tr class="border-t border-gray-200">
-                    <td class="py-2 px-4">{{ $data->bulan }}</td>
-                    <td class="py-2 px-4">{{ $data->rekening->rekening }} - {{ $data->rekening->bank }}</td>
-                    <td class="py-2 px-4">{{ number_format($data->saldo_awal, 2) }}</td>
-                    <td class="py-2 px-4">{{ number_format($data->jumlah_pengeluaran, 2) }}</td>
-                    <td class="py-2 px-4">{{ $data->keterangan }}</td>
-                    <td class="py-2 px-4">{{ $data->status }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-</div>
+        <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4 text-red-600">Belum Disahkan</h2>
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <thead class="bg-gray-200 text-gray-600">
+                    <tr>
+                        <th class="py-2 px-4">Bulan</th>
+                        <th class="py-2 px-4">Rekening</th>
+                        <th class="py-2 px-4">Saldo Awal</th>
+                        <th class="py-2 px-4">Jumlah Pengeluaran</th>
+                        <th class="py-2 px-4">Keterangan</th>
+                        <th class="py-2 px-4">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($belumDisahkan as $data)
+                        <tr class="border-t border-gray-200">
+                            <td class="py-2 px-4">{{ $data->bulan }}</td>
+                            <td class="py-2 px-4">{{ $data->rekening->rekening }} - {{ $data->rekening->bank }}</td>
+                            <td class="py-2 px-4">{{ number_format($data->saldo_awal, 2) }}</td>
+                            <td class="py-2 px-4">{{ number_format($data->jumlah_pengeluaran, 2) }}</td>
+                            <td class="py-2 px-4">{{ $data->keterangan }}</td>
+                            <td class="py-2 px-4">{{ $data->status }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        <!-- Total Pengeluaran -->
+        <div class="mt-4">
+            <div class="bg-blue-600 text-white p-6 rounded-lg shadow-md flex justify-between items-center">
+                <h3 class="text-lg font-bold">Total Pengeluaran: Rp <span id="totalPengeluaran">{{ number_format($totalPengeluaran, 2) }}</span></h3>
+            </div>
+        </div>
+
+        <!-- Filter untuk Total Pengeluaran -->
+        <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-bold mb-4">Filter Data Penerimaan</h3>
+            <form id="filterForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="bulanFilter" class="block text-sm font-medium text-gray-700">Bulan:</label>
+                    <select name="bulan" id="bulanFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <option value="" disabled selected>Pilih Bulan</option>
+                        @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $month)
+                            <option value="{{ $month }}">{{ $month }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="statusFilter" class="block text-sm font-medium text-gray-700">Status:</label>
+                    <select name="status" id="statusFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <option value="" disabled selected>Pilih Status</option>
+                        <option value="Sudah Disahkan">Sudah Disahkan</option>
+                        <option value="Belum Disahkan">Belum Disahkan</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabel Total Pengeluaran (dengan filter) -->
+        <div id="filteredTable" class="bg-white shadow-md rounded-lg p-6">
+            <h3 class="text-lg font-bold mb-4">Data Total Berdasarkan Filter</h3>
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th>Bulan</th>
+                        <th>Rekening</th>
+                        <th>Pengeluaran</th>
+                    </tr>
+                </thead>
+                <tbody id="filteredTableBody">
+                    <!-- Konten akan diperbarui melalui AJAX -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
-<!-- Total Pengeluaran -->
-<div class="mt-4">
-    <h3 class="text-lg font-bold">Total Pengeluaran: Rp <span id="totalPengeluaran">{{ number_format($totalPengeluaran, 2) }}</span></h3>
-</div>
 
-<!-- Filter untuk Total Pengeluaran -->
-<div class="mb-4">
-    <form id="filterForm">
-        <label for="bulanFilter">Bulan:</label>
-        <select name="bulan" id="bulanFilter" class="border rounded p-2">
-            @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $month)
-                <option value="{{ $month }}">{{ $month }}</option>
-            @endforeach
-        </select>
-
-        <label for="statusFilter">Status:</label>
-        <select name="status" id="statusFilter" class="border rounded p-2">
-            <option value="Sudah Disahkan">Sudah Disahkan</option>
-            <option value="Belum Disahkan">Belum Disahkan</option>
-        </select>
-    </form>
-</div>
-
-<!-- Tabel Total Pengeluaran (dengan filter) -->
-<div id="filteredTable" class="bg-white shadow-md rounded-lg p-6">
-    <h3 class="text-lg font-bold mb-4">Data Total Berdasarkan Filter</h3>
-    <table class="min-w-full bg-white border border-gray-200 rounded-lg">
-        <thead class="bg-gray-200">
-            <tr>
-                <th>Bulan</th>
-                <th>Rekening</th>
-                <th>Pengeluaran</th>
-            </tr>
-        </thead>
-        <tbody id="filteredTableBody">
-            <!-- Konten akan diperbarui melalui AJAX -->
-        </tbody>
-    </table>
-</div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
@@ -311,6 +347,29 @@
             @endif
         });
     </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterBulan = document.getElementById('filterBulan');
+        const tableRows = document.querySelectorAll('#pengeluaranTable tbody tr');
+
+        // Event listener untuk perubahan pada dropdown filter
+        filterBulan.addEventListener('change', function () {
+            const selectedBulan = filterBulan.value;
+
+            tableRows.forEach(row => {
+                // Ambil data bulan dari atribut data-bulan
+                const rowBulan = row.getAttribute('data-bulan');
+
+                // Tampilkan atau sembunyikan baris berdasarkan bulan
+                if (selectedBulan === '' || rowBulan === selectedBulan) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
 
 
 

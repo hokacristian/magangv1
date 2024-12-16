@@ -7,13 +7,9 @@ use App\Http\Controllers\PenerimaanController;
 use App\Http\Controllers\PengeluaranController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
 // Login dan Logout Routes
-Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+Route::get('/', [AuthenticatedSessionController::class, 'create'])->name('login');
+Route::post('/', [AuthenticatedSessionController::class, 'store']);
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
 // Middleware untuk role: direktur
