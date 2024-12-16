@@ -13,16 +13,14 @@ class DirekturController extends Controller
     }
 
     public function downloadPDF()
-    {
-        // Data yang dikirim ke view
-        $data = [
-            'message' => 'HAIIII',
-        ];
+{
+    // Data tambahan jika diperlukan
+    $data = [];
 
-        // Generate PDF dari view 'pdf.hai'
-        $pdf = PDF::loadView('pdf.hai', $data);
+    // Generate PDF dari template view
+    $pdf = PDF::loadView('pdf.rekonsiliasi', $data);
 
-        // Tampilkan file PDF untuk didownload
-        return $pdf->download('file_hai.pdf');
-    }
+    // Unduh PDF
+    return $pdf->download('Rekonsiliasi_Saldo_BLU_Maret2023.pdf');
+}
 }
