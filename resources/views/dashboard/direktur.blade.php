@@ -9,10 +9,16 @@
     <h1>Selamat datang, Direktur!</h1>
     <p>Ini adalah halaman dashboard untuk Direktur.</p>
 
-    <!-- Tombol Download PDF -->
-    <a href="{{ route('direktur.download-pdf') }}">
-        <button type="button">Download Laporan PDF</button>
-    </a>
+    <form action="{{ route('direktur.rekonsiliasi') }}" method="POST">
+        @csrf
+        <label for="bulan">Pilih Bulan:</label>
+        <select name="bulan" id="bulan" required>
+            @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $bln)
+                <option value="{{ $bln }}">{{ $bln }}</option>
+            @endforeach
+        </select>
+        <button type="submit">Lihat Rekonsiliasi</button>
+    </form>
 
     <form action="{{ route('logout') }}" method="POST">
         @csrf

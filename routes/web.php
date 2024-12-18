@@ -12,18 +12,17 @@ Route::get('/', [AuthenticatedSessionController::class, 'create'])->name('login'
 Route::post('/', [AuthenticatedSessionController::class, 'store']);
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
-// Middleware untuk role: direktur
-Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':direktur'])->group(function () {
-    Route::get('/direktur/dashboard', [DirekturController::class, 'index'])->name('direktur.dashboard');
 
-});
 
 // Middleware untuk role: direktur
 Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':direktur'])->group(function () {
     Route::get('/direktur/dashboard', [DirekturController::class, 'index'])->name('direktur.dashboard');
-    Route::get('/direktur/download-pdf', [DirekturController::class, 'downloadPDF'])
-        ->name('direktur.download-pdf');
+    Route::post('/direktur/rekonsiliasi', [DirekturController::class, 'filterRekonsiliasi'])->name('direktur.rekonsiliasi');
+    Route::post('/direktur/preview-pdf', [DirekturController::class, 'previewPDF'])->name('direktur.preview-pdf');
+    Route::post('/direktur/download-pdf', [DirekturController::class, 'downloadPDF'])->name('direktur.download-pdf');
+
 });
+
 
 // Middleware untuk role: katim
 Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':katim'])->group(function () {

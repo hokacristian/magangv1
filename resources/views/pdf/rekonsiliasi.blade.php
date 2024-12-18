@@ -11,7 +11,7 @@
             line-height: 1.6;
         }
 
-        h1, h2 {
+        h1, h2, h3 {
             text-align: center;
         }
 
@@ -44,10 +44,10 @@
 <body>
     <h1>BERITA ACARA REKONSILIASI</h1>
     <h2>PEMERIKSAAN KAS SALDO REKENING BENDAHARA BLU</h2>
-    <h2>BULAN MARET 2023</h2>
+    <h2>BULAN {{ strtoupper($bulan) }} 2024</h2>
     <h3>POLITEKNIK KESEHATAN KEMENKES MANADO</h3>
 
-    <p>Pada hari Jumat ini tanggal Tiga puluh satu bulan Maret tahun 2023 telah dilakukan <strong>Rekonsiliasi Data Saldo Rekening BLU</strong> untuk periode data rekening sampai dengan 31 Maret 2023 sebagai berikut:</p>
+    <p>Pada hari ini tanggal Tiga puluh satu bulan {{ $bulan }} tahun 2024 telah dilakukan <strong>Rekonsiliasi Data Saldo Rekening BLU</strong> untuk periode data rekening sampai dengan 31 {{ $bulan }} 2024 sebagai berikut:</p>
 
     <table>
         <thead>
@@ -56,115 +56,47 @@
                 <th>Rekening</th>
                 <th>Bank</th>
                 <th>Saldo Awal</th>
-                <th>Penerimaan</th>
-                <th>Pengeluaran</th>
+                <th>Penerimaan (Disahkan)</th>
+                <th>Pengeluaran (Disahkan)</th>
                 <th>Saldo Akhir</th>
             </tr>
         </thead>
         <tbody>
+            @foreach($dataRekening as $index => $rek)
             <tr>
-                <td>1</td>
-                <td>8003380047</td>
-                <td>BNI</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td>{{ $index + 1 }}</td>
+                <td>{{ $rek['rekening'] }}</td>
+                <td>{{ $rek['bank'] }}</td>
+                <td>{{ number_format($rek['saldo_awal'], 2) }}</td>
+                <td>{{ number_format($rek['penerimaan'], 2) }}</td>
+                <td>{{ number_format($rek['pengeluaran'], 2) }}</td>
+                <td>{{ number_format($rek['saldo_akhir'], 2) }}</td>
             </tr>
-            <tr>
-                <td>2</td>
-                <td>1050001534463</td>
-                <td>MANDIRI</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>3</td>
-                <td>5009000111-30-000715-13</td>
-                <td>BTN</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>4</td>
-                <td>5009000111-30-000714-5</td>
-                <td>BTN</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>5</td>
-                <td>5009000111-30-000715-8</td>
-                <td>BTN</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>6</td>
-                <td>770000215487266</td>
-                <td>BSI</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>7</td>
-                <td>770000216482795</td>
-                <td>BSI</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>8</td>
-                <td>5009000111-30-000716-3</td>
-                <td>BTN</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>9</td>
-                <td>5009000111-30-000713-8</td>
-                <td>BTN</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>10</td>
-                <td>000011-40-002009-3</td>
-                <td>BTN</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
+            @endforeach
         </tbody>
     </table>
 
     <p class="section-title">Hasil Pemeriksaan Rekening BLU:</p>
-    <p>1. Saldo Akhir Rekening BLU : Rp</p>
-    <p>2. Pengesahan Pendapatan : Rp</p>
-    <p>3. Pengesahan Belanja : Rp</p>
-    <p>4. Belum Pengesahan : Rp</p>
+    <p>1. Saldo Akhir Rekening BLU : Rp {{ number_format($saldoAkhirBLU, 2) }}</p>
+    <p>2. Pengesahan Pendapatan : Rp {{ number_format($pengesahanPendapatan, 2) }}</p>
+    <p>3. Pengesahan Belanja : Rp {{ number_format($pengesahanBelanja, 2) }}</p>
+    <p>4. Belum Pengesahan : Rp {{ number_format($belumPengesahan, 2) }}</p>
     <ul>
-        <li>a) Pendapatan : Rp</li>
-        <li>b) Belanja : Rp</li>
+        <li>a) Pendapatan : Rp {{ number_format($belumPengesahanPendapatan, 2) }}</li>
+        <li>b) Belanja : Rp {{ number_format($belumPengesahanBelanja, 2) }}</li>
     </ul>
 
     <p class="notes">Catatan :</p>
+
+    {{-- Tombol Download hanya tampil jika bukan dalam mode download PDF --}}
+    @if(!isset($isDownload) || !$isDownload)
+        <div class="download-button">
+            <form action="{{ route('direktur.download-pdf') }}" method="POST">
+                @csrf
+                <input type="hidden" name="bulan" value="{{ $bulan }}">
+                <button type="submit">Download PDF</button>
+            </form>
+        </div>
+    @endif
 </body>
 </html>
