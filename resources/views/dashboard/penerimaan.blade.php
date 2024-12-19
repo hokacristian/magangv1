@@ -8,17 +8,34 @@
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .spinner-border {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #ffffff;
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
-
+    <!-- Loading Spinner -->
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+        <div class="spinner-border"></div>
+    </div>
     <!-- Header -->
     <nav class="bg-blue-600 p-4 shadow-lg">
     <div class="container mx-auto flex justify-between items-center">
         <h1 class="text-white text-2xl font-bold">Dashboard Penerimaan</h1>
         <div class="relative">
             <!-- Profile Dropdown Trigger -->
-            <button id="profileButton" class="flex items-center space-x-2 text-white focus:outline-none">
-                <img src="{{ asset('images/photowhite.png') }}" alt="Profile Picture" class="w-10 h-10">
+            <button id="profileButton" class="flex items-center space-x-1 text-white focus:outline-none">
+                <img src="{{ asset('images/photowhite.png') }}" alt="Profile Picture" class="w-7 h-7">
                 <span>{{ Auth::user()->name }}</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -53,7 +70,7 @@
         <!-- Input Data Penerimaan -->
         <div class="bg-white shadow-md rounded-lg p-6 mb-8">
             <h2 class="text-xl font-bold mb-4">Input Data Penerimaan</h2>
-            <form action="{{ route('penerimaan.store') }}" method="POST" class="space-y-4">
+            <form action="{{ route('penerimaan.store') }}" method="POST" class="space-y-4" onsubmit="showLoader()">
                 @csrf
 
                 <div>
@@ -329,6 +346,9 @@
         });
     </script>
     <script>
+    function showLoader() {
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+    }
     document.addEventListener('DOMContentLoaded', function () {
         const profileButton = document.getElementById('profileButton');
         const profileDropdown = document.getElementById('profileDropdown');

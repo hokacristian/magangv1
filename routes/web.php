@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\DirekturController;
 use App\Http\Controllers\KatimController;
 use App\Http\Controllers\PenerimaanController;
 use App\Http\Controllers\PengeluaranController;
@@ -27,6 +26,9 @@ Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':direktu
 // Middleware untuk role: katim
 Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':katim'])->group(function () {
     Route::get('/katim/dashboard', [KatimController::class, 'index'])->name('katim.dashboard');
+    Route::post('/katim/rekonsiliasi', [KatimController::class, 'filterRekonsiliasi'])->name('katim.rekonsiliasi');
+    Route::post('/katim/preview-pdf', [KatimController::class, 'previewPDF'])->name('katim.preview-pdf');
+    Route::post('/katim/download-pdf', [KatimController::class, 'downloadPDF'])->name('katim.download-pdf');
 });
 
 // Middleware untuk role: penerimaan

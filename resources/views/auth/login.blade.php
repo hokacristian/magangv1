@@ -1,4 +1,10 @@
 <x-guest-layout>
+    <!-- Tambahkan deskripsi halaman -->
+    <div class="text-center mb-4">
+        <h1 class="text-2xl font-bold text-gray-800">Selamat Datang</h1>
+        <p class="text-gray-600">Ini adalah halaman Login. Silakan masukkan email dan password Anda untuk melanjutkan.</p>
+    </div>
+
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
@@ -17,9 +23,9 @@
             <x-input-label for="password" :value="__('Password')" />
 
             <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
+                          type="password"
+                          name="password"
+                          required autocomplete="current-password" />
 
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>

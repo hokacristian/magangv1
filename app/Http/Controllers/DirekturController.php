@@ -10,10 +10,36 @@ use PDF;
 
 class DirekturController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('dashboard.direktur');
+        $bulan = $request->input('bulan', null); // Bulan dipilih atau default null
+    
+        // Query Total Penerimaan
+        $totalPenerimaan = Penerimaan::selectRaw('rekening_id, sum(penerimaan) as total_penerimaan, status')
+            ->when($bulan, function ($query, $bulan) {
+                return $query->where('bulan', $bulan);
+            })
+            ->groupBy('rekening_id', 'status')
+            ->with('rekening')
+            ->get();
+    
+        // Query Total Pengeluaran
+        $totalPengeluaran = Pengeluaran::selectRaw('rekening_id, sum(jumlah_pengeluaran) as total_pengeluaran, status')
+            ->when($bulan, function ($query, $bulan) {
+                return $query->where('bulan', $bulan);
+            })
+            ->groupBy('rekening_id', 'status')
+            ->with('rekening')
+            ->get();
+    
+        // Grand Total
+        $grandTotalPenerimaan = $totalPenerimaan->sum('total_penerimaan');
+        $grandTotalPengeluaran = $totalPengeluaran->sum('total_pengeluaran');
+    
+        // Kirim data ke view dashboard
+        return view('dashboard.direktur', compact('totalPenerimaan', 'totalPengeluaran', 'grandTotalPenerimaan', 'grandTotalPengeluaran', 'bulan'));
     }
+    
 
     public function filterRekonsiliasi(Request $request)
     {
@@ -218,5 +244,4 @@ public function downloadPDF(Request $request)
     // Return PDF untuk preview di browser
     return $pdf->stream("Rekonsiliasi_Saldo_BLU_$bulan.pdf");
 }
-
 }
