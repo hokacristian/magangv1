@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\KatimController;
+use App\Http\Controllers\DirekturController;
 use App\Http\Controllers\PenerimaanController;
 use App\Http\Controllers\PengeluaranController;
 use Illuminate\Support\Facades\Route;
