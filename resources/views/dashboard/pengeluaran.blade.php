@@ -248,7 +248,7 @@
 
         <!-- Filter untuk Total Pengeluaran -->
         <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
-        <h3 class="text-lg font-bold mb-4">Filter Data Penerimaan</h3>
+        <h3 class="text-lg font-bold mb-4">Filter Data Pengeluaran</h3>
             <form id="filterForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                     <label for="bulanFilter" class="block text-sm font-medium text-gray-700">Bulan:</label>

@@ -13,27 +13,31 @@ class KatimController extends Controller
     {
         $bulan = $request->input('bulan', null); // Bulan dipilih atau default null
     
-        // Query Total Penerimaan
-        $totalPenerimaan = Penerimaan::selectRaw('rekening_id, sum(penerimaan) as total_penerimaan, status')
-            ->when($bulan, function ($query, $bulan) {
-                return $query->where('bulan', $bulan);
-            })
-            ->groupBy('rekening_id', 'status')
-            ->with('rekening')
-            ->get();
-    
-        // Query Total Pengeluaran
-        $totalPengeluaran = Pengeluaran::selectRaw('rekening_id, sum(jumlah_pengeluaran) as total_pengeluaran, status')
-            ->when($bulan, function ($query, $bulan) {
-                return $query->where('bulan', $bulan);
-            })
-            ->groupBy('rekening_id', 'status')
-            ->with('rekening')
-            ->get();
-    
-        // Grand Total
-        $grandTotalPenerimaan = $totalPenerimaan->sum('total_penerimaan');
-        $grandTotalPengeluaran = $totalPengeluaran->sum('total_pengeluaran');
+       // Query Total Penerimaan (hanya "Sudah Disahkan")
+$totalPenerimaan = Penerimaan::selectRaw('rekening_id, sum(penerimaan) as total_penerimaan, status')
+->where('status', 'Sudah Disahkan')  // Filter hanya yang sudah disahkan
+->when($bulan, function ($query, $bulan) {
+    return $query->where('bulan', $bulan);
+})
+->groupBy('rekening_id', 'status')
+->with('rekening')
+->get();
+
+// Query Total Pengeluaran (hanya "Sudah Disahkan")
+$totalPengeluaran = Pengeluaran::selectRaw('rekening_id, sum(jumlah_pengeluaran) as total_pengeluaran, status')
+->where('status', 'Sudah Disahkan')  // Filter hanya yang sudah disahkan
+->when($bulan, function ($query, $bulan) {
+    return $query->where('bulan', $bulan);
+})
+->groupBy('rekening_id', 'status')
+->with('rekening')
+->get();
+
+// Grand Total Penerimaan (hanya total penerimaan yang sudah disahkan)
+$grandTotalPenerimaan = $totalPenerimaan->sum('total_penerimaan');
+
+// Grand Total Pengeluaran (hanya total pengeluaran yang sudah disahkan)
+$grandTotalPengeluaran = $totalPengeluaran->sum('total_pengeluaran');
     
         // Kirim data ke view dashboard
         return view('dashboard.katim', compact('totalPenerimaan', 'totalPengeluaran', 'grandTotalPenerimaan', 'grandTotalPengeluaran', 'bulan'));
