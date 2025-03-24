@@ -12,9 +12,15 @@ return new class extends Migration
     public function up()
     {
         Schema::table('penerimaans', function (Blueprint $table) {
-            $table->dropColumn(['saldo_awal', 'saldo_akhir']);
+            if (Schema::hasColumn('penerimaans', 'saldo_awal')) {
+                $table->dropColumn('saldo_awal');
+            }
+            if (Schema::hasColumn('penerimaans', 'saldo_akhir')) {
+                $table->dropColumn('saldo_akhir');
+            }
         });
     }
+    
     
     public function down()
     {

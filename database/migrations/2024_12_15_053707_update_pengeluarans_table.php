@@ -12,10 +12,15 @@ return new class extends Migration
     public function up()
     {
         Schema::table('pengeluarans', function (Blueprint $table) {
-            $table->dropColumn(['saldo_awal', 'saldo_akhir']);
+            if (Schema::hasColumn('pengeluarans', 'saldo_awal')) {
+                $table->dropColumn('saldo_awal');
+            }
+            if (Schema::hasColumn('pengeluarans', 'saldo_akhir')) {
+                $table->dropColumn('saldo_akhir');
+            }
         });
     }
-    
+
     public function down()
     {
         Schema::table('pengeluarans', function (Blueprint $table) {
@@ -23,5 +28,4 @@ return new class extends Migration
             $table->decimal('saldo_akhir', 15, 2)->default(0);
         });
     }
-    
 };

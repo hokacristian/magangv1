@@ -89,14 +89,25 @@
     <p class="notes">Catatan :</p>
 
     {{-- Tombol Download hanya tampil jika bukan dalam mode download PDF --}}
-    @if(!isset($isDownload) || !$isDownload)
-        <div class="download-button">
+@if(!isset($isDownload) || !$isDownload)
+    <div class="download-button">
+        @if(auth()->user()->hasRole('direktur'))
             <form action="{{ route('direktur.download-pdf') }}" method="POST">
                 @csrf
                 <input type="hidden" name="bulan" value="{{ $bulan }}">
-                <button type="submit">Download PDF</button>
+                <button type="submit">Download PDF (Direktur)</button>
             </form>
-        </div>
-    @endif
+        @endif
+
+        @if(auth()->user()->hasRole('katim'))
+            <form action="{{ route('katim.download-pdf') }}" method="POST">
+                @csrf
+                <input type="hidden" name="bulan" value="{{ $bulan }}">
+                <button type="submit">Download PDF (Katim)</button>
+            </form>
+        @endif
+    </div>
+@endif
+
 </body>
 </html>
