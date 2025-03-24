@@ -97,6 +97,73 @@
                         <label for="penerimaan" class="block text-sm font-medium text-gray-700">Jumlah Penerimaan:</label>
                         <input type="number" name="penerimaan" step="0.01" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
                     </div>
+
+                    <script>
+// Format number dengan thousand separator (titik)
+function formatRupiah(angka) {
+    // Pastikan input adalah string
+    angka = String(angka);
+    
+    // Hapus semua karakter non-digit
+    angka = angka.replace(/[^\d]/g, '');
+    
+    // Split angka untuk memisahkan bagian desimal jika ada
+    const parts = angka.split('.');
+    const numberPart = parts[0];
+    const decimalPart = parts.length > 1 ? '.' + parts[1] : '';
+    
+    // Format dengan thousand separator (titik untuk format Indonesia)
+    const formattedNumber = numberPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    
+    return formattedNumber + decimalPart;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Ambil elemen input penerimaan
+    const inputPenerimaan = document.querySelector('input[name="penerimaan"]');
+    
+    // Buat elemen input tambahan untuk tampilan yang diformat
+    const formattedInput = document.createElement('input');
+    formattedInput.type = 'text';
+    formattedInput.className = inputPenerimaan.className;
+    formattedInput.placeholder = inputPenerimaan.placeholder || 'Masukkan jumlah';
+    
+    // Sembunyikan input asli
+    inputPenerimaan.style.display = 'none';
+    
+    // Masukkan input yang diformat setelah input asli
+    inputPenerimaan.parentNode.insertBefore(formattedInput, inputPenerimaan.nextSibling);
+    
+    // Event listener saat user mengetik di input yang diformat
+    formattedInput.addEventListener('input', function(e) {
+        // Simpan posisi kursor
+        const cursorPos = this.selectionStart;
+        
+        // Dapatkan nilai tanpa format (untuk disimpan di input asli)
+        const value = this.value.replace(/\./g, '');
+        
+        // Simpan nilai tanpa format ke input asli
+        inputPenerimaan.value = value;
+        
+        // Format nilai untuk ditampilkan
+        const formattedValue = formatRupiah(value);
+        
+        // Hitung perubahan panjang sebelum dan sesudah format
+        const lengthDiff = formattedValue.length - this.value.length;
+        
+        // Perbarui nilai yang ditampilkan
+        this.value = formattedValue;
+        
+        // Atur ulang posisi kursor dengan mempertimbangkan perubahan panjang
+        this.setSelectionRange(cursorPos + lengthDiff, cursorPos + lengthDiff);
+    });
+    
+    // Event listener untuk copy nilai dari input asli ke input yang diformat saat halaman dimuat
+    if (inputPenerimaan.value) {
+        formattedInput.value = formatRupiah(inputPenerimaan.value);
+    }
+});
+</script>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
