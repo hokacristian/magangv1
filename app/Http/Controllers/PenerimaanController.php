@@ -5,29 +5,39 @@ namespace App\Http\Controllers;
 use App\Models\Penerimaan;
 use App\Models\Rekening;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class PenerimaanController extends Controller
 {
     public function index(Request $request)
     {
         // Filter request
-        $bulan = $request->get('bulan', 'Januari');
+        $bulan = $request->get('bulan');
+        $tahun = $request->get('tahun', date('Y')); // Default tahun saat ini
         $status = $request->get('status', 'Sudah Disahkan');
 
         // Ambil semua data rekening
         $rekenings = Rekening::all();
 
         // Ambil data penerimaan
-        $penerimaans = Penerimaan::with('rekening')->get();
+        $penerimaans = Penerimaan::with('rekening')->orderBy('tanggal', 'desc')->get();
 
         // Data berdasarkan filter
-        $filteredData = Penerimaan::with('rekening')
-            ->where('bulan', $bulan)
+        $filteredData = Penerimaan::with('rekening');
+        
+        if ($bulan) {
+            $filteredData = $filteredData->where('bulan', $bulan);
+        }
+        
+        $filteredData = $filteredData->where('tahun', $tahun)
             ->where('status', $status)
             ->get();
 
         // Filter "Belum Disahkan"
-        $belumDisahkan = $penerimaans->where('status', 'Belum Disahkan');
+        $belumDisahkan = Penerimaan::with('rekening')
+            ->where('status', 'Belum Disahkan')
+            ->orderBy('tanggal', 'desc')
+            ->get();
 
         // Hitung total pendapatan
         $totalPendapatan = $filteredData->sum('penerimaan');
@@ -38,6 +48,8 @@ class PenerimaanController extends Controller
                 'filteredData' => $filteredData->map(function ($item) {
                     return [
                         'bulan' => $item->bulan,
+                        'tanggal' => $item->tanggal ? date('d-m-Y', strtotime($item->tanggal)) : '-',
+                        'tahun' => $item->tahun,
                         'rekening' => $item->rekening->rekening . ' - ' . $item->rekening->bank,
                         'penerimaan' => $item->penerimaan,
                     ];
@@ -47,7 +59,12 @@ class PenerimaanController extends Controller
         }
 
         // Return ke view
-        return view('dashboard.penerimaan', compact('rekenings', 'penerimaans', 'belumDisahkan', 'totalPendapatan'));
+        return view('dashboard.penerimaan', compact(
+            'rekenings', 
+            'penerimaans', 
+            'belumDisahkan', 
+            'totalPendapatan'
+        ));
     }
 
     public function store(Request $request)
@@ -55,19 +72,23 @@ class PenerimaanController extends Controller
         $request->validate([
             'rekening_id' => 'required|exists:rekenings,id',
             'bulan' => 'required|string',
+            'tanggal' => 'required|date',
             'penerimaan' => 'required|numeric|min:0',
             'keterangan' => 'required|string',
             'status' => 'required|string|in:Sudah Disahkan,Belum Disahkan',
         ]);
 
         $rekening = Rekening::findOrFail($request->rekening_id);
+        $tahun = date('Y', strtotime($request->tanggal));
 
-        \DB::transaction(function () use ($request, $rekening) {
+        \DB::transaction(function () use ($request, $rekening, $tahun) {
             $saldo_awal = $rekening->saldo_saat_ini;
 
             $penerimaan = Penerimaan::create([
                 'rekening_id' => $request->rekening_id,
                 'bulan' => $request->bulan,
+                'tanggal' => $request->tanggal,
+                'tahun' => $tahun,
                 'saldo_awal' => $saldo_awal,
                 'penerimaan' => $request->penerimaan,
                 'saldo_akhir' => $saldo_awal + $request->penerimaan,

@@ -187,24 +187,29 @@ document.addEventListener('DOMContentLoaded', function() {
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
-            $('#rekening_id').change(function () {
-                const rekeningId = $(this).val();
-                if (rekeningId) {
-                    $.ajax({
-                        url: '/rekening/saldo/' + rekeningId,
-                        type: 'GET',
-                        success: function (data) {
-                            $('#saldo_saat_ini').text(data.saldo_saat_ini.toLocaleString('id-ID'));
-                        },
-                        error: function () {
-                            alert('Gagal mendapatkan saldo rekening.');
-                        }
-                    });
-                } else {
-                    $('#saldo_saat_ini').text('0');
+    $('#rekening_id').change(function () {
+        const rekeningId = $(this).val();
+        if (rekeningId) {
+            $.ajax({
+                url: '/rekening/saldo/' + rekeningId,
+                type: 'GET',
+                success: function (data) {
+                    // Pastikan saldo adalah angka sebelum diformat
+                    let saldo = Number(data.saldo_saat_ini) || 0;
+
+                    // Format saldo dengan "Rp." di awalnya dan pemisah ribuan
+                    $('#saldo_saat_ini').text('Rp. ' + saldo.toLocaleString('id-ID'));
+                },
+                error: function () {
+                    alert('Gagal mendapatkan saldo rekening.');
                 }
             });
-        });
+        } else {
+            $('#saldo_saat_ini').text('Rp. 0');
+        }
+    });
+});
+
     </script>
     <div class="mb-4">
         <label for="filterBulan" class="block text-sm font-medium text-gray-700">Filter Berdasarkan Bulan:</label>

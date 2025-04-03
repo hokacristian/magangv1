@@ -69,28 +69,53 @@
 
         <!-- Input Data Penerimaan -->
         <div class="bg-white shadow-md rounded-lg p-6 mb-8">
-            <h2 class="text-xl font-bold mb-4">Input Data Penerimaan</h2>
-            <form action="{{ route('penerimaan.store') }}" method="POST" class="space-y-4" onsubmit="showLoader()">
-                @csrf
+    <h2 class="text-xl font-bold mb-4">Input Data Penerimaan</h2>
+    <form action="{{ route('penerimaan.store') }}" method="POST" class="space-y-4" onsubmit="showLoader()">
+        @csrf
 
-                <div>
-                    <label for="rekening_id" class="block text-sm font-medium text-gray-700">Pilih Rekening:</label>
-                    <select name="rekening_id" id="rekening_id" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
-                        <option value="" disabled selected>Pilih Rekening</option>
-                        @foreach($rekenings as $rekening)
-                            <option value="{{ $rekening->id }}">{{ $rekening->rekening }} - {{ $rekening->bank }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <p class="text-sm text-gray-600"><strong>Saldo Saat Ini:</strong> <span id="saldo_saat_ini" class="text-blue-500">0</span></p>
+        <div>
+    <label for="rekening_id" class="block text-sm font-medium text-gray-700">Pilih Rekening:</label>
+    <select name="rekening_id" id="rekening_id" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
+        <option value="" disabled selected>Pilih Rekening</option>
+        @foreach($rekenings as $rekening)
+            <option value="{{ $rekening->id }}" data-saldo="{{ $rekening->saldo }}">
+                {{ $rekening->rekening }} - {{ $rekening->bank }}
+            </option>
+        @endforeach
+    </select>
+</div>
+<p class="text-lg text-gray-600">
+    <strong>Saldo Saat Ini:</strong>
+    <span id="saldo_saat_ini" class="text-blue-500">RP. 0</span>
+</p>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="bulan" class="block text-sm font-medium text-gray-700">Bulan:</label>
-                        <select name="bulan" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
-                            @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $bulan)
-                                <option value="{{ $bulan }}">{{ $bulan }}</option>
-                            @endforeach
+<script>
+    function formatRupiah(angka) {
+        return 'RP. ' + angka.toLocaleString('id-ID');
+    }
+
+    const selectRekening = document.getElementById('rekening_id');
+    
+    function updateSaldo() {
+        const selectedOption = selectRekening.options[selectRekening.selectedIndex];
+        const saldo = parseFloat(selectedOption.getAttribute('data-saldo')) || 0;
+        document.getElementById('saldo_saat_ini').textContent = formatRupiah(saldo);
+    }
+
+    // Update saldo saat pilihan berubah
+    selectRekening.addEventListener('change', updateSaldo);
+    
+    // Inisialisasi saldo pertama kali
+    updateSaldo();
+</script>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label for="bulan" class="block text-sm font-medium text-gray-700">Bulan:</label>
+                <select name="bulan" id="bulan" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
+                    @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $index => $bulan)
+                        <option value="{{ $bulan }}" {{ date('n') == $index + 1 ? 'selected' : '' }}>{{ $bulan }}</option>
+                    @endforeach
                         </select>
                     </div>
                     <div>
@@ -98,7 +123,18 @@
                         <input type="number" name="penerimaan" step="0.01" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
                     </div>
 
-                    <script>
+                    <div>
+                <label for="tanggal" class="block text-sm font-medium text-gray-700">Tanggal:</label>
+                <input type="date" name="tanggal" id="tanggal" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg" value="{{ date('Y-m-d') }}">
+            </div>
+
+            <div>
+            <label class="block text-sm font-medium text-gray-700">Tahun:</label>
+            <div id="tahun_display" class="mt-1 p-2 bg-gray-100 border border-gray-300 rounded-lg">{{ date('Y') }}</div>
+            <input type="hidden" name="tahun" id="tahun_input" value="{{ date('Y') }}">
+        </div>
+
+        <script>
 // Format number dengan thousand separator (titik)
 function formatRupiah(angka) {
     // Pastikan input adalah string
@@ -162,6 +198,25 @@ document.addEventListener('DOMContentLoaded', function() {
     if (inputPenerimaan.value) {
         formattedInput.value = formatRupiah(inputPenerimaan.value);
     }
+
+    // Event listener untuk update bulan berdasarkan tanggal yang dipilih
+    const tanggalInput = document.getElementById('tanggal');
+    const bulanSelect = document.getElementById('bulan');
+    const tahunDisplay = document.getElementById('tahun_display');
+    const tahunInput = document.getElementById('tahun_input');
+    
+    tanggalInput.addEventListener('change', function() {
+        const tanggal = new Date(this.value);
+        const bulanIndex = tanggal.getMonth(); // 0-11
+        const tahun = tanggal.getFullYear();
+        
+        // Update bulan dropdown sesuai tanggal
+        bulanSelect.selectedIndex = bulanIndex;
+        
+        // Update tahun display dan hidden input
+        tahunDisplay.textContent = tahun;
+        tahunInput.value = tahun;
+    });
 });
 </script>
                 </div>
@@ -185,75 +240,104 @@ document.addEventListener('DOMContentLoaded', function() {
                 </button>
             </form>
         </div>
-        <div class="mb-4">
-            <label for="filterBulanRiwayat" class="block text-sm font-medium text-gray-700">Filter Berdasarkan Bulan:</label>
-            <select id="filterBulanRiwayat" class="mt-1 block w-full md:w-1/3 p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                <option value="">Semua Bulan</option>
-                @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $bulan)
-                    <option value="{{ $bulan }}">{{ $bulan }}</option>
-                @endforeach
-            </select>
-        </div>
+        <!-- Filter Bagian -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div>
+        <label for="filterBulanRiwayat" class="block text-sm font-medium text-gray-700">Filter Berdasarkan Bulan:</label>
+        <select id="filterBulanRiwayat" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            <option value="">Semua Bulan</option>
+            @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $bulan)
+                <option value="{{ $bulan }}">{{ $bulan }}</option>
+            @endforeach
+        </select>
+    </div>
+    <div>
+        <label for="filterTahunRiwayat" class="block text-sm font-medium text-gray-700">Filter Berdasarkan Tahun:</label>
+        <select id="filterTahunRiwayat" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            @php
+                $currentYear = date('Y');
+                $years = range($currentYear - 1, $currentYear + 5);
+            @endphp
+            <option value="">Semua Tahun</option>
+            @foreach($years as $year)
+                <option value="{{ $year }}" {{ $year == $currentYear ? 'selected' : '' }}>{{ $year }}</option>
+            @endforeach
+        </select>
+    </div>
+</div>
         <!-- Riwayat Penerimaan -->
-                <div class="bg-white shadow-md rounded-lg p-6 mb-8">
-                    <h2 class="text-xl font-bold mb-4">Riwayat Penerimaan</h2>
-                    <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
-                        <thead class="bg-gray-200 text-gray-600">
-                            <tr>
-                                <th class="py-2 px-4">Bulan</th>
-                                <th class="py-2 px-4">Rekening</th>
-                                <th class="py-2 px-4">Saldo Awal</th>
-                                <th class="py-2 px-4">Penerimaan</th>
-                                <th class="py-2 px-4">Saldo Akhir</th>
-                                <th class="py-2 px-4">Keterangan</th>
-                                <th class="py-2 px-4">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="riwayatPenerimaanBody">
-                    @foreach($penerimaans as $penerimaan)
-                        <tr class="border-t border-gray-200" data-bulan="{{ $penerimaan->bulan }}">
-                            <td class="py-2 px-4">{{ $penerimaan->bulan }}</td>
-                            <td class="py-2 px-4">{{ $penerimaan->rekening->rekening }} - {{ $penerimaan->rekening->bank }}</td>
-                            <td class="py-2 px-4">{{ number_format($penerimaan->saldo_awal, 2) }}</td>
-                            <td class="py-2 px-4">{{ number_format($penerimaan->penerimaan, 2) }}</td>
-                            <td class="py-2 px-4">
-                                @if ($penerimaan->status === 'Sudah Disahkan')
-                                    {{ number_format($penerimaan->saldo_akhir, 2) }}
-                                @else
-                                    {{ number_format($penerimaan->saldo_awal, 2) }}
-                                @endif
-                            </td>
-                            <td class="py-2 px-4">{{ $penerimaan->keterangan }}</td>
+<div class="bg-white shadow-md rounded-lg p-6 mb-8">
+    <h2 class="text-xl font-bold mb-4">Riwayat Penerimaan</h2>
+    <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <thead class="bg-gray-200 text-gray-600">
+            <tr>
+                <!-- Tambahkan kolom Tanggal dan Tahun -->
+                <th class="py-2 px-4">Tanggal</th>
+                <th class="py-2 px-4">Bulan</th>
+                <th class="py-2 px-4">Tahun</th>
+                <th class="py-2 px-4">Rekening</th>
+                <th class="py-2 px-4">Saldo Awal</th>
+                <th class="py-2 px-4">Penerimaan</th>
+                <th class="py-2 px-4">Saldo Akhir</th>
+                <th class="py-2 px-4">Keterangan</th>
+                <th class="py-2 px-4">Status</th>
+            </tr>
+        </thead>
+        <tbody id="riwayatPenerimaanBody">
+            @foreach($penerimaans as $penerimaan)
+                <tr class="border-t border-gray-200" 
+                    data-bulan="{{ $penerimaan->bulan }}" 
+                    data-tahun="{{ $penerimaan->tahun }}">
+                    <!-- Tambahkan tampilan tanggal dan tahun -->
                     <td class="py-2 px-4">
-            <form action="{{ route('penerimaan.updateStatus', $penerimaan->id) }}" method="POST">
-                @csrf
-                <select 
-                    name="status" 
-                    onchange="this.form.submit()" 
-                    class="rounded p-1 focus:outline-none focus:ring-2 
-                        @if ($penerimaan->status === 'Sudah Disahkan') 
-                            bg-green-500 text-white 
-                        @else 
-                            bg-red-500 text-white 
-                        @endif">
-                    <option 
-                        value="Sudah Disahkan" 
-                        {{ $penerimaan->status === 'Sudah Disahkan' ? 'selected' : '' }}
-                        class="text-white bg-green-500">
-                        Sudah Disahkan
-                    </option>
-                    <option 
-                        value="Belum Disahkan" 
-                        {{ $penerimaan->status === 'Belum Disahkan' ? 'selected' : '' }}
-                        class="text-white bg-red-500">
-                        Belum Disahkan
-                    </option>
-                    </select>
-                </form>
-            </td>
-        </tr>
-    @endforeach
-</tbody>
+                        {{ $penerimaan->tanggal ? date('d-m-Y', strtotime($penerimaan->tanggal)) : '-' }}
+                    </td>
+                    <td class="py-2 px-4">{{ $penerimaan->bulan }}</td>
+                    <td class="py-2 px-4">{{ $penerimaan->tahun }}</td>
+                    <td class="py-2 px-4">{{ $penerimaan->rekening->rekening }} - {{ $penerimaan->rekening->bank }}</td>
+                    <td class="py-2 px-4">{{ number_format($penerimaan->saldo_awal, 2) }}</td>
+                    <td class="py-2 px-4">{{ number_format($penerimaan->penerimaan, 2) }}</td>
+                    <td class="py-2 px-4">
+                        @if ($penerimaan->status === 'Sudah Disahkan')
+                            {{ number_format($penerimaan->saldo_akhir, 2) }}
+                        @else
+                            {{ number_format($penerimaan->saldo_awal, 2) }}
+                        @endif
+                    </td>
+                    <td class="py-2 px-4">{{ $penerimaan->keterangan }}</td>
+                    <td class="py-2 px-4">
+                        <form action="{{ route('penerimaan.updateStatus', $penerimaan->id) }}" method="POST">
+                            @csrf
+                            <select 
+                                name="status" 
+                                onchange="this.form.submit()" 
+                                class="rounded p-1 focus:outline-none focus:ring-2 
+                                    @if ($penerimaan->status === 'Sudah Disahkan') 
+                                        bg-green-500 text-white 
+                                    @else 
+                                        bg-red-500 text-white 
+                                    @endif">
+                                <option 
+                                    value="Sudah Disahkan" 
+                                    {{ $penerimaan->status === 'Sudah Disahkan' ? 'selected' : '' }}
+                                    class="text-white bg-green-500">
+                                    Sudah Disahkan
+                                </option>
+                                <option 
+                                    value="Belum Disahkan" 
+                                    {{ $penerimaan->status === 'Belum Disahkan' ? 'selected' : '' }}
+                                    class="text-white bg-red-500">
+                                    Belum Disahkan
+                                </option>
+                            </select>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
+
 
             </table>
         </div>
@@ -438,44 +522,61 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
-        $('#rekening_id').change(function () {
-            const rekeningId = $(this).val();
-            if (rekeningId) {
-                $.ajax({
-                    url: '/rekening/saldo/' + rekeningId,
-                    type: 'GET',
-                    success: function (data) {
-                        $('#saldo_saat_ini').text(data.saldo_saat_ini.toLocaleString('id-ID'));
-                    },
-                    error: function () {
-                        alert('Gagal mendapatkan saldo rekening.');
-                    }
-                });
-            } else {
-                $('#saldo_saat_ini').text('0');
-            }
-        });
+    $('#rekening_id').change(function () {
+        const rekeningId = $(this).val();
+        if (rekeningId) {
+            $.ajax({
+                url: '/rekening/saldo/' + rekeningId,
+                type: 'GET',
+                success: function (data) {
+                    // Pastikan saldo adalah angka sebelum diformat
+                    let saldo = Number(data.saldo_saat_ini) || 0;
+
+                    // Format saldo dengan "Rp." di awalnya dan pemisah ribuan
+                    $('#saldo_saat_ini').text('Rp. ' + saldo.toLocaleString('id-ID'));
+                },
+                error: function () {
+                    alert('Gagal mendapatkan saldo rekening.');
+                }
+            });
+        } else {
+            $('#saldo_saat_ini').text('Rp. 0');
+        }
     });
+});
+
+
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const filterBulanRiwayat = document.getElementById('filterBulanRiwayat');
+        const filterTahunRiwayat = document.getElementById('filterTahunRiwayat');
         const riwayatRows = document.querySelectorAll('#riwayatPenerimaanBody tr');
 
-        // Event Listener untuk filter bulan
-        filterBulanRiwayat.addEventListener('change', function () {
+        // Event Listener untuk filter bulan dan tahun
+        function applyFilter() {
             const selectedBulan = filterBulanRiwayat.value;
+            const selectedTahun = filterTahunRiwayat.value;
 
             riwayatRows.forEach(row => {
                 const rowBulan = row.getAttribute('data-bulan');
+                const rowTahun = row.getAttribute('data-tahun');
+                const showByBulan = selectedBulan === '' || rowBulan === selectedBulan;
+                const showByTahun = selectedTahun === '' || rowTahun === selectedTahun;
 
-                if (selectedBulan === '' || rowBulan === selectedBulan) {
+                if (showByBulan && showByTahun) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
                 }
             });
-        });
+        }
+
+        filterBulanRiwayat.addEventListener('change', applyFilter);
+        filterTahunRiwayat.addEventListener('change', applyFilter);
+
+        // Initial filter application
+        applyFilter();
     });
 </script>
 

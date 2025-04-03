@@ -9,7 +9,17 @@ class Pengeluaran extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['rekening_id', 'bulan', 'saldo_awal', 'jumlah_pengeluaran', 'saldo_akhir', 'keterangan', 'status'];
+    protected $fillable = [
+        'rekening_id', 
+        'bulan', 
+        'tanggal', 
+        'tahun', 
+        'saldo_awal', 
+        'jumlah_pengeluaran', 
+        'saldo_akhir', 
+        'keterangan', 
+        'status'
+    ];
 
     public function rekening()
     {
