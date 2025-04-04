@@ -37,7 +37,9 @@ Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':penerim
     Route::get('/penerimaan/dashboard', [PenerimaanController::class, 'index'])->name('penerimaan.dashboard');
     Route::post('/penerimaan/store', [PenerimaanController::class, 'store'])->name('penerimaan.store');
     Route::post('/penerimaan/update-status/{id}', [PenerimaanController::class, 'updateStatus'])->name('penerimaan.updateStatus'); // Tambahkan route ini untuk update status
-
+    Route::get('/penerimaan/{id}/edit', [PenerimaanController::class, 'edit'])->name('penerimaan.edit');
+    Route::put('/penerimaan/{id}', [PenerimaanController::class, 'update'])->name('penerimaan.update');
+    Route::delete('/penerimaan/{id}', [PenerimaanController::class, 'destroy'])->name('penerimaan.destroy');
 });
 
 // AJAX untuk Saldo Rekening

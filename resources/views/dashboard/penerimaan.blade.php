@@ -222,10 +222,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="keterangan" class="block text-sm font-medium text-gray-700">Keterangan:</label>
-                        <input type="text" name="keterangan" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
-                    </div>
+                <div>
+    <label for="keterangan" class="block text-sm font-medium text-gray-700">Keterangan:</label>
+    <select id="keteranganSelect" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
+        <option value="" disabled selected>Pilih Keterangan</option>
+        <option value="4100">4100 </option>
+        <option value="4101">4101 </option>
+        <option value="4102">4102 </option>
+        <option value="4103">4103 </option>
+        <option value="4104">4104 </option>
+        <option value="4105">4105 </option>
+        <option value="4200">4200 </option>
+        <option value="4201">4201 </option>
+        <option value="4202">4202 </option>
+        <option value="4203">4203 </option>
+        <option value="4204">4204 </option>
+        <option value="4205">4205 </option>
+        <option value="4300">4300 </option>
+        <option value="4301">4301 </option>
+        <option value="4302">4302 </option>
+        <option value="4303">4303 </option>
+        <option value="4304">4304 </option>
+    </select>
+    <!-- Input tersembunyi yang akan menyimpan nilai kode COA -->
+    <input type="hidden" name="keterangan" id="keteranganInput" required>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const keteranganSelect = document.getElementById('keteranganSelect');
+    const keteranganInput = document.getElementById('keteranganInput');
+    
+    // Set nilai default untuk menghindari error validasi
+    keteranganInput.value = '';
+    
+    keteranganSelect.addEventListener('change', function() {
+        // Simpan HANYA kode COA (nilai value dari option)
+        keteranganInput.value = this.value;
+    });
+});
+</script>
                     <div>
                         <label for="status" class="block text-sm font-medium text-gray-700">Status:</label>
                         <select name="status" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
@@ -265,78 +301,246 @@ document.addEventListener('DOMContentLoaded', function() {
         </select>
     </div>
 </div>
-        <!-- Riwayat Penerimaan -->
-<div class="bg-white shadow-md rounded-lg p-6 mb-8">
-    <h2 class="text-xl font-bold mb-4">Riwayat Penerimaan</h2>
-    <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <thead class="bg-gray-200 text-gray-600">
-            <tr>
-                <!-- Tambahkan kolom Tanggal dan Tahun -->
-                <th class="py-2 px-4">Tanggal</th>
-                <th class="py-2 px-4">Bulan</th>
-                <th class="py-2 px-4">Tahun</th>
-                <th class="py-2 px-4">Rekening</th>
-                <th class="py-2 px-4">Saldo Awal</th>
-                <th class="py-2 px-4">Penerimaan</th>
-                <th class="py-2 px-4">Saldo Akhir</th>
-                <th class="py-2 px-4">Keterangan</th>
-                <th class="py-2 px-4">Status</th>
-            </tr>
-        </thead>
-        <tbody id="riwayatPenerimaanBody">
-            @foreach($penerimaans as $penerimaan)
-                <tr class="border-t border-gray-200" 
-                    data-bulan="{{ $penerimaan->bulan }}" 
-                    data-tahun="{{ $penerimaan->tahun }}">
-                    <!-- Tambahkan tampilan tanggal dan tahun -->
-                    <td class="py-2 px-4">
-                        {{ $penerimaan->tanggal ? date('d-m-Y', strtotime($penerimaan->tanggal)) : '-' }}
-                    </td>
-                    <td class="py-2 px-4">{{ $penerimaan->bulan }}</td>
-                    <td class="py-2 px-4">{{ $penerimaan->tahun }}</td>
-                    <td class="py-2 px-4">{{ $penerimaan->rekening->rekening }} - {{ $penerimaan->rekening->bank }}</td>
-                    <td class="py-2 px-4">{{ number_format($penerimaan->saldo_awal, 2) }}</td>
-                    <td class="py-2 px-4">{{ number_format($penerimaan->penerimaan, 2) }}</td>
-                    <td class="py-2 px-4">
-                        @if ($penerimaan->status === 'Sudah Disahkan')
-                            {{ number_format($penerimaan->saldo_akhir, 2) }}
-                        @else
-                            {{ number_format($penerimaan->saldo_awal, 2) }}
-                        @endif
-                    </td>
-                    <td class="py-2 px-4">{{ $penerimaan->keterangan }}</td>
-                    <td class="py-2 px-4">
-                        <form action="{{ route('penerimaan.updateStatus', $penerimaan->id) }}" method="POST">
-                            @csrf
+<!-- Tabel Riwayat -->
+<table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <thead class="bg-gray-200 text-gray-600">
+        <tr>
+            <th class="py-2 px-4">Tanggal</th>
+            <th class="py-2 px-4">Bulan</th>
+            <th class="py-2 px-4">Tahun</th>
+            <th class="py-2 px-4">Rekening</th>
+            <th class="py-2 px-4">Saldo Awal</th>
+            <th class="py-2 px-4">Penerimaan</th>
+            <th class="py-2 px-4">Saldo Akhir</th>
+            <th class="py-2 px-4">COA</th>
+            <th class="py-2 px-4">Keterangan</th>
+            <th class="py-2 px-4">Status</th>
+            <th class="py-2 px-4">Aksi</th>
+        </tr>
+    </thead>
+    <tbody id="riwayatPenerimaanBody">
+        @foreach($penerimaans as $penerimaan)
+            <tr class="border-t border-gray-200" 
+                data-bulan="{{ $penerimaan->bulan }}" 
+                data-tahun="{{ $penerimaan->tahun }}">
+                <td class="py-2 px-4">
+                    {{ $penerimaan->tanggal ? date('d-m-Y', strtotime($penerimaan->tanggal)) : '-' }}
+                </td>
+                <td class="py-2 px-4">{{ $penerimaan->bulan }}</td>
+                <td class="py-2 px-4">{{ $penerimaan->tahun }}</td>
+                <td class="py-2 px-4">{{ $penerimaan->rekening->rekening }} - {{ $penerimaan->rekening->bank }}</td>
+                <td class="py-2 px-4">{{ number_format($penerimaan->saldo_awal, 2) }}</td>
+                <td class="py-2 px-4">{{ number_format($penerimaan->penerimaan, 2) }}</td>
+                <td class="py-2 px-4">
+                    @if ($penerimaan->status === 'Sudah Disahkan')
+                        {{ number_format($penerimaan->saldo_akhir, 2) }}
+                    @else
+                        {{ number_format($penerimaan->saldo_awal, 2) }}
+                    @endif
+                </td>
+                <td class="py-2 px-4 text-center coa-cell">{{ $penerimaan->keterangan }}</td>
+                <td class="py-2 px-4 keterangan-cell" data-coa="{{ $penerimaan->keterangan }}"></td>
+                <td class="py-2 px-4">
+                    <form action="{{ route('penerimaan.updateStatus', $penerimaan->id) }}" method="POST">
+                        @csrf
+                        @if ($penerimaan->status === 'Belum Disahkan')
                             <select 
                                 name="status" 
                                 onchange="this.form.submit()" 
-                                class="rounded p-1 focus:outline-none focus:ring-2 
-                                    @if ($penerimaan->status === 'Sudah Disahkan') 
-                                        bg-green-500 text-white 
-                                    @else 
-                                        bg-red-500 text-white 
-                                    @endif">
-                                <option 
-                                    value="Sudah Disahkan" 
-                                    {{ $penerimaan->status === 'Sudah Disahkan' ? 'selected' : '' }}
-                                    class="text-white bg-green-500">
-                                    Sudah Disahkan
-                                </option>
-                                <option 
-                                    value="Belum Disahkan" 
-                                    {{ $penerimaan->status === 'Belum Disahkan' ? 'selected' : '' }}
-                                    class="text-white bg-red-500">
+                                class="rounded p-1 focus:outline-none focus:ring-2 bg-red-500 text-white">
+                                <option value="Belum Disahkan" selected class="text-white bg-red-500">
                                     Belum Disahkan
                                 </option>
+                                <option value="Sudah Disahkan" class="text-white bg-green-500">
+                                    Sudah Disahkan
+                                </option>
                             </select>
-                        </form>
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
+                        @else
+                            <div class="rounded p-1 bg-green-500 text-white text-center">
+                                Sudah Disahkan
+                            </div>
+                        @endif
+                    </form>
+                </td>
+                <td class="py-2 px-4 flex space-x-2">
+                    <button onclick="openEditModal('{{ $penerimaan->id }}')" 
+                            class="bg-blue-500 hover:bg-blue-700 text-white px-2 py-1 rounded">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button onclick="confirmDelete('{{ $penerimaan->id }}')"
+                            class="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded">
+                        <i class="fas fa-trash"></i> Hapus
+                    </button>
+                </td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
+
+<!-- Modal Edit -->
+<div id="editModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 hidden flex justify-center items-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+        <h3 class="text-lg font-bold mb-4">Edit Data Penerimaan</h3>
+        <form id="editForm" action="" method="POST" class="space-y-4">
+            @csrf
+            @method('PUT')
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="edit_tanggal" class="block text-sm font-medium text-gray-700">Tanggal:</label>
+                    <input type="date" name="tanggal" id="edit_tanggal" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+                
+                <div>
+                    <label for="edit_bulan" class="block text-sm font-medium text-gray-700">Bulan:</label>
+                    <select name="bulan" id="edit_bulan" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
+                        @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $bulan)
+                            <option value="{{ $bulan }}">{{ $bulan }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="edit_tahun" class="block text-sm font-medium text-gray-700">Tahun:</label>
+                    <input type="number" name="tahun" id="edit_tahun" required min="2000" max="2100" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+                
+                <div>
+                    <label for="edit_keterangan" class="block text-sm font-medium text-gray-700">COA:</label>
+                    <select name="keterangan" id="edit_keterangan" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
+                        <option value="" disabled>Pilih COA</option>
+                        @foreach(['4100', '4101', '4102', '4103', '4104', '4105', '4200', '4201', '4202', '4203', '4204', '4205', '4300', '4301', '4302', '4303', '4304'] as $coa)
+                            <option value="{{ $coa }}">{{ $coa }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="edit_penerimaan" class="block text-sm font-medium text-gray-700">Jumlah Penerimaan:</label>
+                    <input type="number" name="penerimaan" id="edit_penerimaan" required step="0.01" min="0" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-2 mt-4">
+                <button type="button" onclick="closeEditModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                    Batal
+                </button>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
+
+<!-- Modal Konfirmasi Hapus -->
+<div id="deleteModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 hidden flex justify-center items-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-bold mb-4">Konfirmasi Hapus</h3>
+        <p class="mb-4">Apakah Anda yakin ingin menghapus data ini?</p>
+        
+        <form id="deleteForm" action="" method="POST">
+            @csrf
+            @method('DELETE')
+            
+            <div class="flex justify-end space-x-2">
+                <button type="button" onclick="closeDeleteModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                    Tidak
+                </button>
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                    Ya
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Tambahkan script di bagian akhir halaman -->
+<script>
+    // Fungsi untuk membuka modal edit
+    function openEditModal(id) {
+        // Ambil data penerimaan via AJAX
+        $.ajax({
+            url: `/penerimaan/${id}/edit`,
+            type: 'GET',
+            success: function(data) {
+                // Format tanggal dari database (YYYY-MM-DD) ke format input date
+                const tanggal = data.tanggal ? data.tanggal.split('T')[0] : '';
+                
+                // Isi formulir dengan data yang ada
+                $('#edit_tanggal').val(tanggal);
+                $('#edit_bulan').val(data.bulan);
+                $('#edit_tahun').val(data.tahun);
+                $('#edit_keterangan').val(data.keterangan);
+                $('#edit_penerimaan').val(data.penerimaan);
+                
+                // Set action form ke route update
+                $('#editForm').attr('action', `/penerimaan/${id}`);
+                
+                // Tampilkan modal
+                $('#editModal').removeClass('hidden').addClass('flex');
+            },
+            error: function() {
+                alert('Gagal mengambil data penerimaan!');
+            }
+        });
+    }
+    
+    // Fungsi untuk menutup modal edit
+    function closeEditModal() {
+        $('#editModal').removeClass('flex').addClass('hidden');
+    }
+    
+    // Fungsi untuk konfirmasi hapus
+    function confirmDelete(id) {
+        // Set action form ke route destroy
+        $('#deleteForm').attr('action', `/penerimaan/${id}`);
+        
+        // Tampilkan modal konfirmasi
+        $('#deleteModal').removeClass('hidden').addClass('flex');
+    }
+    
+    // Fungsi untuk menutup modal konfirmasi hapus
+    function closeDeleteModal() {
+        $('#deleteModal').removeClass('flex').addClass('hidden');
+    }
+</script>
+
+<script>
+// Kamus kode COA untuk penerimaan HARUS DIDEFINISIKAN SEBELUM digunakan
+const coaDictionary = {
+    "4100": "Pendapatan Operasional",
+    "4101": "Pendapatan SPP & UKT",
+    "4102": "Pendapatan Registrasi & Her-Registrasi",
+    "4103": "Pendapatan Ujian Kompetensi",
+    "4104": "Pendapatan Wisuda & Ijazah",
+    "4105": "Pendapatan Sertifikasi & Pelatihan",
+    "4200": "Pendapatan Non-Operasional",
+    "4201": "Pendapatan dari Sewa Fasilitas",
+    "4202": "Pendapatan Penelitian & Hibah",
+    "4203": "Pendapatan Workshop & Seminar",
+    "4204": "Pendapatan dari Kegiatan Mahasiswa",
+    "4205": "Pendapatan Bunga Bank",
+    "4300": "Pendapatan Lain-lain",
+    "4301": "Pendapatan dari Donasi & CSR",
+    "4302": "Pendapatan dari Kerjasama Institusi",
+    "4303": "Pendapatan dari Penjualan Barang/Merchandise",
+    "4304": "Pendapatan dari Kegiatan Sosial"
+};
+
+// Isi kolom keterangan berdasarkan kode COA
+document.addEventListener('DOMContentLoaded', function() {
+    const cells = document.querySelectorAll('.keterangan-cell');
+    cells.forEach(cell => {
+        const coa = cell.getAttribute('data-coa');
+        if (coaDictionary[coa]) {
+            cell.textContent = coaDictionary[coa];
+        } else {
+            cell.textContent = "Keterangan tidak ditemukan";
+        }
+    });
+});
+</script>
 
 
             </table>
@@ -463,6 +667,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Panggil fungsi pertama kali
         updateTotalPenerimaan();
     });
+
+
 </script>
 
 

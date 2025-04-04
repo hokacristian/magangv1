@@ -97,6 +97,18 @@
                         <input type="number" name="jumlah_pengeluaran" step="0.01" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
                     </div>
 
+                    <!-- Tambahkan di grid grid-cols-2 gap-4 -->
+<div>
+    <label for="tanggal" class="block text-sm font-medium text-gray-700">Tanggal:</label>
+    <input type="date" name="tanggal" id="tanggal" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg" value="{{ date('Y-m-d') }}">
+</div>
+
+<div>
+    <label class="block text-sm font-medium text-gray-700">Tahun:</label>
+    <div id="tahun_display" class="mt-1 p-2 bg-gray-100 border border-gray-300 rounded-lg">{{ date('Y') }}</div>
+    <input type="hidden" name="tahun" id="tahun_input" value="{{ date('Y') }}">
+</div>
+
                     <script>
 // Format number dengan thousand separator (titik)
 function formatRupiah(angka) {
@@ -166,9 +178,58 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
 
                 <div>
-                    <label for="keterangan" class="block text-sm font-medium text-gray-700">Keterangan:</label>
-                    <input type="text" name="keterangan" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
-                </div>
+    <label for="keterangan" class="block text-sm font-medium text-gray-700">Keterangan:</label>
+    <select id="keteranganSelect" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
+        <option value="" disabled selected>Pilih Keterangan</option>
+        <option value="5100">5100</option>
+        <option value="5101">5101</option>
+        <option value="5102">5102</option>
+        <option value="5103">5103</option>
+        <option value="5104">5104</option>
+        <option value="5105">5105</option>
+        <option value="5200">5200</option>
+        <option value="5201">5201</option>
+        <option value="5202">5202</option>
+        <option value="5203">5203</option>
+        <option value="5204">5204</option>
+        <option value="5205">5205</option>
+        <option value="5300">5300</option>
+        <option value="5301">5301</option>
+        <option value="5302">5302</option>
+        <option value="5303">5303</option>
+        <option value="5304">5304</option>
+        <option value="5305">5305</option>
+        <option value="5400">5400</option>
+        <option value="5401">5401</option>
+        <option value="5402">5402</option>
+        <option value="5403">5403</option>
+        <option value="5404">5404</option>
+        <option value="5405">5405</option>
+        <option value="5500">5500</option>
+        <option value="5501">5501</option>
+        <option value="5502">5502</option>
+        <option value="5503">5503</option>
+        <option value="5504">5504</option>
+        <option value="5505">5505</option>
+    </select>
+    <!-- Input tersembunyi yang akan menyimpan nilai kode COA -->
+    <input type="hidden" name="keterangan" id="keteranganInput" required>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const keteranganSelect = document.getElementById('keteranganSelect');
+    const keteranganInput = document.getElementById('keteranganInput');
+    
+    // Set nilai default untuk menghindari error validasi
+    keteranganInput.value = '';
+    
+    keteranganSelect.addEventListener('change', function() {
+        // Simpan HANYA kode COA (nilai value dari option)
+        keteranganInput.value = this.value;
+    });
+});
+</script>
 
                 <div>
                     <label for="status" class="block text-sm font-medium text-gray-700">Status:</label>
@@ -221,68 +282,152 @@ document.addEventListener('DOMContentLoaded', function() {
         </select>
     </div>
 
-        <!-- Riwayat Pengeluaran -->
-        <div class="bg-white shadow-md rounded-lg p-6 mb-8">
-            <h2 class="text-xl font-bold mb-4">Riwayat Pengeluaran</h2>
-            <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden" id="pengeluaranTable">
-                <thead class="bg-gray-200 text-gray-600">
-                    <tr>
-                        <th class="py-2 px-4">Bulan</th>
-                        <th class="py-2 px-4">Rekening</th>
-                        <th class="py-2 px-4">Saldo Awal</th>
-                        <th class="py-2 px-4">Jumlah Pengeluaran</th>
-                        <th class="py-2 px-4">Saldo Akhir</th>
-                        <th class="py-2 px-4">Keterangan</th>
-                        <th class="py-2 px-4">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($pengeluarans as $pengeluaran)
-                        <tr class="border-t border-gray-200" data-bulan="{{ $pengeluaran->bulan }}">
-                            <td class="py-2 px-4">{{ $pengeluaran->bulan }}</td>
-                            <td class="py-2 px-4">{{ $pengeluaran->rekening->rekening }} - {{ $pengeluaran->rekening->bank }}</td>
-                            <td class="py-2 px-4">{{ number_format($pengeluaran->saldo_awal, 2) }}</td>
-                            <td class="py-2 px-4">{{ number_format($pengeluaran->jumlah_pengeluaran, 2) }}</td>
-                            <td class="py-2 px-4">
-                                @if ($pengeluaran->status === 'Sudah Disahkan')
-                                    {{ number_format($pengeluaran->saldo_akhir, 2) }}
-                                @else
-                                    {{ number_format($pengeluaran->saldo_awal, 2) }}
-                                @endif
-                            </td>
-                            <td class="py-2 px-4">{{ $pengeluaran->keterangan }}</td>
-                            <td class="py-2 px-4">
-                            <form action="{{ route('pengeluaran.updateStatus', $pengeluaran->id) }}" method="POST">
-                @csrf
-                <select 
-                    name="status" 
-                    onchange="this.form.submit()" 
-                    class="rounded p-1 focus:outline-none focus:ring-2 
-                        @if ($pengeluaran->status === 'Sudah Disahkan') 
-                            bg-green-500 text-white 
-                        @else 
-                            bg-red-500 text-white 
-                        @endif">
-                    <option 
-                        value="Sudah Disahkan" 
-                        {{ $pengeluaran->status === 'Sudah Disahkan' ? 'selected' : '' }}
-                        class="text-white bg-green-500">
-                        Sudah Disahkan
-                    </option>
-                    <option 
-                        value="Belum Disahkan" 
-                        {{ $pengeluaran->status === 'Belum Disahkan' ? 'selected' : '' }}
-                        class="text-white bg-red-500">
-                        Belum Disahkan
-                    </option>
-                    </select>
-                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+<!-- Riwayat Pengeluaran -->
+<div class="bg-white shadow-md rounded-lg p-6 mb-8">
+    <h2 class="text-xl font-bold mb-4">Riwayat Pengeluaran</h2>
+    <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden" id="pengeluaranTable">
+        <thead class="bg-gray-200 text-gray-600">
+            <tr>
+                <th class="py-2 px-4">Bulan</th>
+                <th class="py-2 px-4">Rekening</th>
+                <th class="py-2 px-4">Saldo Awal</th>
+                <th class="py-2 px-4">Jumlah Pengeluaran</th>
+                <th class="py-2 px-4">Saldo Akhir</th>
+                <th class="py-2 px-4">COA</th>
+                <th class="py-2 px-4">Keterangan</th>
+                <th class="py-2 px-4">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($pengeluarans as $pengeluaran)
+                <tr class="border-t border-gray-200" data-bulan="{{ $pengeluaran->bulan }}">
+                    <td class="py-2 px-4">{{ $pengeluaran->bulan }}</td>
+                    <td class="py-2 px-4">{{ $pengeluaran->rekening->rekening }} - {{ $pengeluaran->rekening->bank }}</td>
+                    <td class="py-2 px-4">{{ number_format($pengeluaran->saldo_awal, 2) }}</td>
+                    <td class="py-2 px-4">{{ number_format($pengeluaran->jumlah_pengeluaran, 2) }}</td>
+                    <td class="py-2 px-4">
+                        @if ($pengeluaran->status === 'Sudah Disahkan')
+                            {{ number_format($pengeluaran->saldo_akhir, 2) }}
+                        @else
+                            {{ number_format($pengeluaran->saldo_awal, 2) }}
+                        @endif
+                    </td>
+                    <td class="py-2 px-4 text-center coa-cell">{{ $pengeluaran->keterangan }}</td>
+                    <td class="py-2 px-4 keterangan-cell" data-coa="{{ $pengeluaran->keterangan }}"></td>
+                    <td class="py-2 px-4">
+                        <form action="{{ route('pengeluaran.updateStatus', $pengeluaran->id) }}" method="POST">
+                            @csrf
+                            <select 
+                                name="status" 
+                                onchange="this.form.submit()" 
+                                class="rounded p-1 focus:outline-none focus:ring-2 
+                                    @if ($pengeluaran->status === 'Sudah Disahkan') 
+                                        bg-green-500 text-white 
+                                    @else 
+                                        bg-red-500 text-white 
+                                    @endif">
+                                <option 
+                                    value="Sudah Disahkan" 
+                                    {{ $pengeluaran->status === 'Sudah Disahkan' ? 'selected' : '' }}
+                                    class="text-white bg-green-500">
+                                    Sudah Disahkan
+                                </option>
+                                <option 
+                                    value="Belum Disahkan" 
+                                    {{ $pengeluaran->status === 'Belum Disahkan' ? 'selected' : '' }}
+                                    class="text-white bg-red-500">
+                                    Belum Disahkan
+                                </option>
+                            </select>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
+
+<script>
+// Kamus kode COA untuk pengeluaran
+const coaDictionary = {
+    "5100": "Beban Pegawai & Tenaga Pendidik",
+    "5101": "Gaji Dosen & Tunjangan Sertifikasi",
+    "5102": "Gaji Tenaga Kependidikan",
+    "5103": "Honorarium Dosen Luar Biasa",
+    "5104": "BPJS Kesehatan & Ketenagakerjaan",
+    "5105": "Biaya Pelatihan dan Pengembangan SDM",
+    "5200": "Beban Operasional Pendidikan",
+    "5201": "Pembelian Alat Tulis Kantor (ATK)",
+    "5202": "Biaya Listrik, Air, dan Internet",
+    "5203": "Pemeliharaan Gedung dan Peralatan",
+    "5204": "Biaya Transportasi dan Perjalanan Dinas",
+    "5205": "Biaya Konsumsi dan Rapat",
+    "5300": "Beban Akademik & Penelitian",
+    "5301": "Biaya Praktikum Mahasiswa",
+    "5302": "Biaya Pengadaan Bahan Lab & Simulasi",
+    "5303": "Biaya Penelitian Dosen dan Mahasiswa",
+    "5304": "Biaya Publikasi Ilmiah dan Seminar",
+    "5305": "Biaya Akreditasi & Sertifikasi Program Studi",
+    "5400": "Beban Mahasiswa & Kegiatan Kemahasiswaan",
+    "5401": "Biaya Organisasi Mahasiswa (BEM, HIMA)",
+    "5402": "Biaya Kegiatan UKM & Kesejahteraan Mahasiswa",
+    "5403": "Bantuan & Beasiswa Mahasiswa",
+    "5404": "Biaya Kegiatan Wisuda",
+    "5405": "Bantuan Kesehatan dan Sosial Mahasiswa",
+    "5500": "Beban Lain-lain",
+    "5501": "Biaya Penyusutan Aset",
+    "5502": "Pajak & Retribusi",
+    "5503": "Biaya Pengelolaan Sampah dan Limbah Medis",
+    "5504": "Biaya CSR & Kegiatan Sosial",
+    "5505": "Biaya Lain-lain Tak Terduga"
+};
+
+// Isi kolom keterangan berdasarkan kode COA
+document.addEventListener('DOMContentLoaded', function() {
+    const cells = document.querySelectorAll('.keterangan-cell');
+    cells.forEach(cell => {
+        const coa = cell.getAttribute('data-coa');
+        if (coaDictionary[coa]) {
+            cell.textContent = coaDictionary[coa];
+        } else {
+            cell.textContent = "Keterangan tidak ditemukan";
+        }
+    });
+    
+    // Event listener untuk filter bulan
+    const filterBulan = document.getElementById('filterBulan');
+    const tableRows = document.querySelectorAll('#pengeluaranTable tbody tr');
+
+    filterBulan.addEventListener('change', function() {
+        const selectedBulan = this.value;
+        
+        tableRows.forEach(row => {
+            const rowBulan = row.getAttribute('data-bulan');
+            
+            if (selectedBulan === '' || rowBulan === selectedBulan) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+    
+    // Event listener untuk update tanggal dan tahun
+    const tanggalInput = document.getElementById('tanggal');
+    const tahunDisplay = document.getElementById('tahun_display');
+    const tahunInput = document.getElementById('tahun_input');
+    
+    tanggalInput.addEventListener('change', function() {
+        const tanggal = new Date(this.value);
+        const tahun = tanggal.getFullYear();
+        
+        // Update tahun display dan hidden input
+        tahunDisplay.textContent = tahun;
+        tahunInput.value = tahun;
+    });
+});
+</script>
+
 <!-- BELUM DISAHKAN -->
         <div class="bg-white shadow-md rounded-lg p-6 mb-8">
             <h2 class="text-xl font-bold mb-4 text-red-600">Belum Disahkan</h2>
@@ -435,32 +580,7 @@ document.addEventListener('DOMContentLoaded', function() {
             @endif
         });
     </script>
-<script>
-    function showLoader() {
-        document.getElementById('loadingOverlay').classList.remove('hidden');
-    }
-    document.addEventListener('DOMContentLoaded', function () {
-        const filterBulan = document.getElementById('filterBulan');
-        const tableRows = document.querySelectorAll('#pengeluaranTable tbody tr');
 
-        // Event listener untuk perubahan pada dropdown filter
-        filterBulan.addEventListener('change', function () {
-            const selectedBulan = filterBulan.value;
-
-            tableRows.forEach(row => {
-                // Ambil data bulan dari atribut data-bulan
-                const rowBulan = row.getAttribute('data-bulan');
-
-                // Tampilkan atau sembunyikan baris berdasarkan bulan
-                if (selectedBulan === '' || rowBulan === selectedBulan) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
-    });
-</script>
 
 
 
