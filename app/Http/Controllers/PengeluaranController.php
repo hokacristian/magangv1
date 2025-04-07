@@ -124,4 +124,81 @@ class PengeluaranController extends Controller
 
         return redirect()->route('pengeluaran.dashboard')->with('success', 'Status berhasil diperbarui!');
     }
+
+// Menampilkan form edit (untuk AJAX request)
+public function edit($id)
+{
+    $pengeluaran = Pengeluaran::findOrFail($id);
+    return response()->json($pengeluaran);
+}
+
+// Update data pengeluaran
+public function update(Request $request, $id)
+{
+    $request->validate([
+        'tanggal' => 'required|date',
+        'bulan' => 'required|string',
+        'tahun' => 'required|numeric',
+        'jumlah_pengeluaran' => 'required|numeric|min:0',
+        'keterangan' => 'required|string',
+        'status' => 'required|string|in:Sudah Disahkan,Belum Disahkan',
+    ]);
+    
+    $pengeluaran = Pengeluaran::findOrFail($id);
+    $rekening = Rekening::findOrFail($pengeluaran->rekening_id);
+    
+    \DB::transaction(function () use ($request, $pengeluaran, $rekening) {
+        // Jika status pengeluaran sudah disahkan dan nilai pengeluaran berubah
+        if ($pengeluaran->status === 'Sudah Disahkan' && $pengeluaran->jumlah_pengeluaran != $request->jumlah_pengeluaran) {
+            // Hitung selisih
+            $selisih = $request->jumlah_pengeluaran - $pengeluaran->jumlah_pengeluaran;
+            
+            // Update saldo rekening
+            $rekening->saldo_saat_ini -= $selisih;
+            $rekening->pengeluaran += $selisih;
+            $rekening->saldo_akhir = $rekening->saldo_saat_ini;
+            $rekening->save();
+        }
+        
+        // Hitung saldo akhir baru untuk data pengeluaran
+        $saldo_akhir = $pengeluaran->saldo_awal - $request->jumlah_pengeluaran;
+        
+        // Update data pengeluaran
+        $pengeluaran->update([
+            'tanggal' => $request->tanggal,
+            'bulan' => $request->bulan,
+            'tahun' => $request->tahun,
+            'jumlah_pengeluaran' => $request->jumlah_pengeluaran,
+            'saldo_akhir' => $saldo_akhir,
+            'keterangan' => $request->keterangan,
+            'status' => $request->status,
+        ]);
+    });
+    
+    return redirect()->route('pengeluaran.dashboard')->with('success', 'Data pengeluaran berhasil diperbarui!');
+}
+
+// Hapus data pengeluaran
+public function destroy($id)
+{
+    $pengeluaran = Pengeluaran::findOrFail($id);
+    $rekening = Rekening::findOrFail($pengeluaran->rekening_id);
+    
+    \DB::transaction(function () use ($pengeluaran, $rekening) {
+        // Jika status pengeluaran sudah disahkan, tambahkan saldo rekening (kembalikan)
+        if ($pengeluaran->status === 'Sudah Disahkan') {
+            // Tambahkan saldo rekening karena pengeluaran dihapus
+            $rekening->saldo_saat_ini += $pengeluaran->jumlah_pengeluaran;
+            $rekening->pengeluaran -= $pengeluaran->jumlah_pengeluaran;
+            $rekening->saldo_akhir = $rekening->saldo_saat_ini;
+            $rekening->save();
+        }
+        
+        // Hapus data pengeluaran
+        $pengeluaran->delete();
+    });
+    
+    return redirect()->route('pengeluaran.dashboard')->with('success', 'Data pengeluaran berhasil dihapus!');
+}
+
 }

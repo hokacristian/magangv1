@@ -84,30 +84,56 @@
                 <p class="text-sm text-gray-600"><strong>Saldo Saat Ini:</strong> <span id="saldo_saat_ini" class="text-blue-500">0</span></p>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="bulan" class="block text-sm font-medium text-gray-700">Bulan:</label>
-                        <select name="bulan" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
-                            @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $bulan)
-                                <option value="{{ $bulan }}">{{ $bulan }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                <div class="grid grid-cols-2 gap-4">
+    <div>
+        <label for="tanggal" class="block text-sm font-medium text-gray-700">Tanggal:</label>
+        <input type="date" name="tanggal" id="tanggal" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg" value="{{ date('Y-m-d') }}">
+    </div>
+
+    <div>
+        <label for="bulan" class="block text-sm font-medium text-gray-700">Bulan:</label>
+        <select name="bulan" id="bulan" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
+            @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $index => $bulan)
+                <option value="{{ $bulan }}" {{ date('n') == $index + 1 ? 'selected' : '' }}>{{ $bulan }}</option>
+            @endforeach
+        </select>
+    </div>
+
+    <div>
+        <label class="block text-sm font-medium text-gray-700">Tahun:</label>
+        <div id="tahun_display" class="mt-1 p-2 bg-gray-100 border border-gray-300 rounded-lg">{{ date('Y') }}</div>
+        <input type="hidden" name="tahun" id="tahun_input" value="{{ date('Y') }}">
+    </div>
+</div>
                     <div>
                         <label for="jumlah_pengeluaran" class="block text-sm font-medium text-gray-700">Jumlah Pengeluaran:</label>
                         <input type="number" name="jumlah_pengeluaran" step="0.01" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
                     </div>
 
-                    <!-- Tambahkan di grid grid-cols-2 gap-4 -->
-<div>
-    <label for="tanggal" class="block text-sm font-medium text-gray-700">Tanggal:</label>
-    <input type="date" name="tanggal" id="tanggal" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg" value="{{ date('Y-m-d') }}">
-</div>
-
-<div>
-    <label class="block text-sm font-medium text-gray-700">Tahun:</label>
-    <div id="tahun_display" class="mt-1 p-2 bg-gray-100 border border-gray-300 rounded-lg">{{ date('Y') }}</div>
-    <input type="hidden" name="tahun" id="tahun_input" value="{{ date('Y') }}">
-</div>
+                    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Event listener untuk update bulan dan tahun berdasarkan tanggal yang dipilih
+    const tanggalInput = document.getElementById('tanggal');
+    const bulanSelect = document.getElementById('bulan');
+    const tahunDisplay = document.getElementById('tahun_display');
+    const tahunInput = document.getElementById('tahun_input');
+    
+    if (tanggalInput && bulanSelect && tahunDisplay && tahunInput) {
+        tanggalInput.addEventListener('change', function() {
+            const tanggal = new Date(this.value);
+            const bulanIndex = tanggal.getMonth(); // 0-11
+            const tahun = tanggal.getFullYear();
+            
+            // Update bulan dropdown sesuai tanggal
+            bulanSelect.selectedIndex = bulanIndex;
+            
+            // Update tahun display dan hidden input
+            tahunDisplay.textContent = tahun;
+            tahunInput.value = tahun;
+        });
+    }
+});
+</script>
 
                     <script>
 // Format number dengan thousand separator (titik)
@@ -230,14 +256,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+<!-- Status tersembunyi, dengan nilai default "Sudah Disahkan" -->
+<input type="hidden" name="status" value="Sudah Disahkan">
 
-                <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700">Status:</label>
-                    <select name="status" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
-                        <option value="Sudah Disahkan">Sudah Disahkan</option>
-                        <option value="Belum Disahkan">Belum Disahkan</option>
-                    </select>
-                </div>
+<!-- <div class="mt-1">
+    <label class="block text-sm font-medium text-gray-700">Status:</label>
+    <div class="mt-1 p-2 bg-green-100 text-green-800 border border-green-300 rounded-lg">
+        Sudah Disahkan
+    </div>
+</div> -->
 
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     Simpan
@@ -272,15 +299,71 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
     </script>
-    <div class="mb-4">
-        <label for="filterBulan" class="block text-sm font-medium text-gray-700">Filter Berdasarkan Bulan:</label>
-        <select id="filterBulan" class="mt-1 block w-full md:w-1/3 p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+ <!-- Filter Bagian -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div>
+        <label for="filterBulanRiwayat" class="block text-sm font-medium text-gray-700">Filter Berdasarkan Bulan:</label>
+        <select id="filterBulanRiwayat" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
             <option value="">Semua Bulan</option>
             @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $bulan)
                 <option value="{{ $bulan }}">{{ $bulan }}</option>
             @endforeach
         </select>
     </div>
+    <div>
+        <label for="filterTahunRiwayat" class="block text-sm font-medium text-gray-700">Filter Berdasarkan Tahun:</label>
+        <select id="filterTahunRiwayat" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            @php
+                $currentYear = date('Y');
+                $years = range($currentYear - 1, $currentYear + 5);
+            @endphp
+            <option value="">Semua Tahun</option>
+            @foreach($years as $year)
+                <option value="{{ $year }}" {{ $year == $currentYear ? 'selected' : '' }}>{{ $year }}</option>
+            @endforeach
+        </select>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Ambil elemen filter dan tabel
+    const filterBulan = document.getElementById('filterBulanRiwayat');
+    const filterTahun = document.getElementById('filterTahunRiwayat');
+    const tableRows = document.querySelectorAll('#pengeluaranTable tbody tr');
+
+    // Fungsi untuk menerapkan filter
+    function applyFilter() {
+        const selectedBulan = filterBulan.value;
+        const selectedTahun = filterTahun.value;
+
+        tableRows.forEach(row => {
+            const rowBulan = row.getAttribute('data-bulan');
+            const rowTahun = row.getAttribute('data-tahun');
+            
+            // Logika filter: tampilkan baris jika sesuai dengan filter atau filter kosong
+            const showByBulan = selectedBulan === '' || rowBulan === selectedBulan;
+            const showByTahun = selectedTahun === '' || rowTahun === selectedTahun;
+
+            // Tampilkan atau sembunyikan baris berdasarkan hasil filter
+            if (showByBulan && showByTahun) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // Tambahkan event listener untuk perubahan filter
+    filterBulan.addEventListener('change', applyFilter);
+    filterTahun.addEventListener('change', applyFilter);
+
+    // Jalankan filter saat halaman dimuat
+    applyFilter();
+});
+</script>
+
+
 
 <!-- Riwayat Pengeluaran -->
 <div class="bg-white shadow-md rounded-lg p-6 mb-8">
@@ -288,7 +371,9 @@ document.addEventListener('DOMContentLoaded', function() {
     <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden" id="pengeluaranTable">
         <thead class="bg-gray-200 text-gray-600">
             <tr>
+                <th class="py-2 px-4">Tanggal</th>
                 <th class="py-2 px-4">Bulan</th>
+                <th class="py-2 px-4">Tahun</th>
                 <th class="py-2 px-4">Rekening</th>
                 <th class="py-2 px-4">Saldo Awal</th>
                 <th class="py-2 px-4">Jumlah Pengeluaran</th>
@@ -296,12 +381,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 <th class="py-2 px-4">COA</th>
                 <th class="py-2 px-4">Keterangan</th>
                 <th class="py-2 px-4">Status</th>
+                <th class="py-2 px-4">Aksi</th>
             </tr>
         </thead>
         <tbody>
             @foreach($pengeluarans as $pengeluaran)
-                <tr class="border-t border-gray-200" data-bulan="{{ $pengeluaran->bulan }}">
+                <tr class="border-t border-gray-200" 
+                    data-bulan="{{ $pengeluaran->bulan }}" 
+                    data-tahun="{{ $pengeluaran->tahun }}">
+                    <td class="py-2 px-4">
+                        {{ $pengeluaran->tanggal ? date('d-m-Y', strtotime($pengeluaran->tanggal)) : '-' }}
+                    </td>
                     <td class="py-2 px-4">{{ $pengeluaran->bulan }}</td>
+                    <td class="py-2 px-4">{{ $pengeluaran->tahun }}</td>
                     <td class="py-2 px-4">{{ $pengeluaran->rekening->rekening }} - {{ $pengeluaran->rekening->bank }}</td>
                     <td class="py-2 px-4">{{ number_format($pengeluaran->saldo_awal, 2) }}</td>
                     <td class="py-2 px-4">{{ number_format($pengeluaran->jumlah_pengeluaran, 2) }}</td>
@@ -315,37 +407,256 @@ document.addEventListener('DOMContentLoaded', function() {
                     <td class="py-2 px-4 text-center coa-cell">{{ $pengeluaran->keterangan }}</td>
                     <td class="py-2 px-4 keterangan-cell" data-coa="{{ $pengeluaran->keterangan }}"></td>
                     <td class="py-2 px-4">
-                        <form action="{{ route('pengeluaran.updateStatus', $pengeluaran->id) }}" method="POST">
-                            @csrf
-                            <select 
-                                name="status" 
-                                onchange="this.form.submit()" 
-                                class="rounded p-1 focus:outline-none focus:ring-2 
-                                    @if ($pengeluaran->status === 'Sudah Disahkan') 
-                                        bg-green-500 text-white 
-                                    @else 
-                                        bg-red-500 text-white 
-                                    @endif">
-                                <option 
-                                    value="Sudah Disahkan" 
-                                    {{ $pengeluaran->status === 'Sudah Disahkan' ? 'selected' : '' }}
-                                    class="text-white bg-green-500">
-                                    Sudah Disahkan
-                                </option>
-                                <option 
-                                    value="Belum Disahkan" 
-                                    {{ $pengeluaran->status === 'Belum Disahkan' ? 'selected' : '' }}
-                                    class="text-white bg-red-500">
-                                    Belum Disahkan
-                                </option>
-                            </select>
-                        </form>
+                        <div class="rounded p-1 bg-green-500 text-white text-center">
+                            {{ $pengeluaran->status }}
+                        </div>
+                    </td>
+                    <td class="py-2 px-4 flex space-x-2">
+                        <button onclick="openEditModal('{{ $pengeluaran->id }}')" 
+                                class="bg-blue-500 hover:bg-blue-700 text-white px-2 py-1 rounded">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button onclick="confirmDelete('{{ $pengeluaran->id }}')"
+                                class="bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded">
+                            <i class="fas fa-trash"></i> Hapus
+                        </button>
                     </td>
                 </tr>
             @endforeach
         </tbody>
     </table>
+
+<!-- Modal Edit -->
+<div id="editModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 hidden flex justify-center items-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+        <h3 class="text-lg font-bold mb-4">Edit Data Pengeluaran</h3>
+        <form id="editForm" action="" method="POST" class="space-y-4">
+            @csrf
+            @method('PUT')
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="edit_tanggal" class="block text-sm font-medium text-gray-700">Tanggal:</label>
+                    <input type="date" name="tanggal" id="edit_tanggal" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+                
+                <div>
+                    <label for="edit_bulan" class="block text-sm font-medium text-gray-700">Bulan:</label>
+                    <select name="bulan" id="edit_bulan" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
+                        @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $bulan)
+                            <option value="{{ $bulan }}">{{ $bulan }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="edit_tahun" class="block text-sm font-medium text-gray-700">Tahun:</label>
+                    <input type="number" name="tahun" id="edit_tahun" required min="2000" max="2100" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+                
+                <div>
+                    <label for="edit_keterangan" class="block text-sm font-medium text-gray-700">COA:</label>
+                    <select name="keterangan" id="edit_keterangan" required class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
+                        <option value="" disabled>Pilih COA</option>
+                        @foreach(['5100', '5101', '5102', '5103', '5104', '5105', '5200', '5201', '5202', '5203', '5204', '5205', '5300', '5301', '5302', '5303', '5304', '5305', '5400', '5401', '5402', '5403', '5404', '5405', '5500', '5501', '5502', '5503', '5504', '5505'] as $coa)
+                            <option value="{{ $coa }}">{{ $coa }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="edit_jumlah_pengeluaran" class="block text-sm font-medium text-gray-700">Jumlah Pengeluaran:</label>
+                    <input type="number" name="jumlah_pengeluaran" id="edit_jumlah_pengeluaran" required step="0.01" min="0" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+                
+                <!-- Hidden status field - always set to "Sudah Disahkan" -->
+                <input type="hidden" name="status" value="Sudah Disahkan">
+            </div>
+            
+            <div class="flex justify-end space-x-2 mt-4">
+                <button type="button" onclick="closeEditModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                    Batal
+                </button>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
+
+<!-- Modal Konfirmasi Hapus -->
+<div id="deleteModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 hidden flex justify-center items-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 class="text-lg font-bold mb-4">Konfirmasi Hapus</h3>
+        <p class="mb-4">Apakah Anda yakin ingin menghapus data ini?</p>
+        
+        <form id="deleteForm" action="" method="POST">
+            @csrf
+            @method('DELETE')
+            
+            <div class="flex justify-end space-x-2">
+                <button type="button" onclick="closeDeleteModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                    Tidak
+                </button>
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                    Ya
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</div>
+
+
+<script>
+    // Fungsi untuk membuka modal edit
+    function openEditModal(id) {
+        // Ambil data pengeluaran via AJAX
+        $.ajax({
+            url: `/pengeluaran/${id}/edit`,
+            type: 'GET',
+            success: function(data) {
+                // Format tanggal dari database (YYYY-MM-DD) ke format input date
+                const tanggal = data.tanggal ? data.tanggal.split('T')[0] : '';
+                
+                // Isi formulir dengan data yang ada
+                $('#edit_tanggal').val(tanggal);
+                $('#edit_bulan').val(data.bulan);
+                $('#edit_tahun').val(data.tahun);
+                $('#edit_keterangan').val(data.keterangan);
+                $('#edit_jumlah_pengeluaran').val(data.jumlah_pengeluaran);
+                
+                // Set action form ke route update
+                $('#editForm').attr('action', `/pengeluaran/${id}`);
+                
+                // Tampilkan modal
+                $('#editModal').removeClass('hidden').addClass('flex');
+                
+                // Initialize formatted input after modal is shown
+                initializeFormattedEditInput();
+                
+                // If there's an existing formatted input, set its value
+                const formattedEditInput = document.getElementById('formatted_edit_jumlah_pengeluaran');
+                if (formattedEditInput && data.jumlah_pengeluaran) {
+                    formattedEditInput.value = formatEditRupiah(data.jumlah_pengeluaran);
+                }
+            },
+            error: function() {
+                alert('Gagal mengambil data pengeluaran!');
+            }
+        });
+    }
+    
+    // Fungsi untuk menutup modal edit
+    function closeEditModal() {
+        $('#editModal').removeClass('flex').addClass('hidden');
+    }
+    
+    // Fungsi untuk konfirmasi hapus
+    function confirmDelete(id) {
+        // Set action form ke route destroy
+        $('#deleteForm').attr('action', `/pengeluaran/${id}`);
+        
+        // Tampilkan modal konfirmasi
+        $('#deleteModal').removeClass('hidden').addClass('flex');
+    }
+    
+    // Fungsi untuk menutup modal konfirmasi hapus
+    function closeDeleteModal() {
+        $('#deleteModal').removeClass('flex').addClass('hidden');
+    }
+    
+    // Format number dengan thousand separator (titik)
+    function formatEditRupiah(angka) {
+        // Pastikan input adalah string
+        angka = String(angka);
+        
+        // Hapus semua karakter non-digit
+        angka = angka.replace(/[^\d]/g, '');
+        
+        // Split angka untuk memisahkan bagian desimal jika ada
+        const parts = angka.split('.');
+        const numberPart = parts[0];
+        const decimalPart = parts.length > 1 ? '.' + parts[1] : '';
+        
+        // Format dengan thousand separator (titik untuk format Indonesia)
+        const formattedNumber = numberPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        
+        return formattedNumber + decimalPart;
+    }
+    
+    // Function to initialize formatted input in edit modal
+    function initializeFormattedEditInput() {
+        // Get original input
+        const editInputPengeluaran = document.getElementById('edit_jumlah_pengeluaran');
+        
+        if (!editInputPengeluaran) return; // Exit if element not found
+        
+        // Check if formatted input already exists
+        if (document.getElementById('formatted_edit_jumlah_pengeluaran')) return;
+        
+        // Create additional input element for formatted display
+        const formattedEditInput = document.createElement('input');
+        formattedEditInput.type = 'text';
+        formattedEditInput.className = editInputPengeluaran.className;
+        formattedEditInput.placeholder = editInputPengeluaran.placeholder || 'Masukkan jumlah';
+        formattedEditInput.id = 'formatted_edit_jumlah_pengeluaran';
+        
+        // Hide original input
+        editInputPengeluaran.style.display = 'none';
+        
+        // Insert formatted input after original input
+        editInputPengeluaran.parentNode.insertBefore(formattedEditInput, editInputPengeluaran.nextSibling);
+        
+        // Event listener when user types in formatted input
+        formattedEditInput.addEventListener('input', function(e) {
+            // Save cursor position
+            const cursorPos = this.selectionStart;
+            
+            // Get value without format (to be saved in original input)
+            const value = this.value.replace(/\./g, '');
+            
+            // Save unformatted value to original input
+            editInputPengeluaran.value = value;
+            
+            // Format value for display
+            const formattedValue = formatEditRupiah(value);
+            
+            // Calculate length change before and after formatting
+            const lengthDiff = formattedValue.length - this.value.length;
+            
+            // Update displayed value
+            this.value = formattedValue;
+            
+            // Reset cursor position considering length change
+            this.setSelectionRange(cursorPos + lengthDiff, cursorPos + lengthDiff);
+        });
+
+        // Tambahkan event listener untuk update bulan dan tahun saat tanggal berubah
+    const editTanggalInput = document.getElementById('edit_tanggal');
+    const editBulanSelect = document.getElementById('edit_bulan');
+    const editTahunInput = document.getElementById('edit_tahun');
+    
+    if (editTanggalInput && editBulanSelect && editTahunInput) {
+        editTanggalInput.addEventListener('change', function() {
+            const tanggal = new Date(this.value);
+            const bulanIndex = tanggal.getMonth(); // 0-11
+            const tahun = tanggal.getFullYear();
+            
+            // Update bulan dropdown berdasarkan tanggal
+            editBulanSelect.selectedIndex = bulanIndex;
+            
+            // Update input tahun
+            editTahunInput.value = tahun;
+        });
+    }
+}
+
+
+
+</script>
 
 <script>
 // Kamus kode COA untuk pengeluaran

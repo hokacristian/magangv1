@@ -455,7 +455,6 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<!-- Tambahkan script di bagian akhir halaman -->
 <script>
     // Fungsi untuk membuka modal edit
     function openEditModal(id) {
@@ -479,6 +478,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Tampilkan modal
                 $('#editModal').removeClass('hidden').addClass('flex');
+                
+                // Initialize formatted input after modal is shown
+                initializeFormattedEditInput();
+                
+                // If there's an existing formatted input, set its value
+                const formattedEditInput = document.getElementById('formatted_edit_penerimaan');
+                if (formattedEditInput && data.penerimaan) {
+                    formattedEditInput.value = formatEditRupiah(data.penerimaan);
+                }
             },
             error: function() {
                 alert('Gagal mengambil data penerimaan!');
@@ -504,6 +512,92 @@ document.addEventListener('DOMContentLoaded', function() {
     function closeDeleteModal() {
         $('#deleteModal').removeClass('flex').addClass('hidden');
     }
+    
+    // Format number dengan thousand separator (titik)
+    function formatEditRupiah(angka) {
+        // Pastikan input adalah string
+        angka = String(angka);
+        
+        // Hapus semua karakter non-digit
+        angka = angka.replace(/[^\d]/g, '');
+        
+        // Split angka untuk memisahkan bagian desimal jika ada
+        const parts = angka.split('.');
+        const numberPart = parts[0];
+        const decimalPart = parts.length > 1 ? '.' + parts[1] : '';
+        
+        // Format dengan thousand separator (titik untuk format Indonesia)
+        const formattedNumber = numberPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        
+        return formattedNumber + decimalPart;
+    }
+    
+    // Function to initialize formatted input in edit modal
+function initializeFormattedEditInput() {
+    // Get original input
+    const editInputPenerimaan = document.getElementById('edit_penerimaan');
+    
+    if (!editInputPenerimaan) return; // Exit if element not found
+    
+    // Check if formatted input already exists
+    if (document.getElementById('formatted_edit_penerimaan')) return;
+    
+    // Create additional input element for formatted display
+    const formattedEditInput = document.createElement('input');
+    formattedEditInput.type = 'text';
+    formattedEditInput.className = editInputPenerimaan.className;
+    formattedEditInput.placeholder = editInputPenerimaan.placeholder || 'Masukkan jumlah';
+    formattedEditInput.id = 'formatted_edit_penerimaan';
+    
+    // Hide original input
+    editInputPenerimaan.style.display = 'none';
+    
+    // Insert formatted input after original input
+    editInputPenerimaan.parentNode.insertBefore(formattedEditInput, editInputPenerimaan.nextSibling);
+    
+    // Event listener when user types in formatted input
+    formattedEditInput.addEventListener('input', function(e) {
+        // Save cursor position
+        const cursorPos = this.selectionStart;
+        
+        // Get value without format (to be saved in original input)
+        const value = this.value.replace(/\./g, '');
+        
+        // Save unformatted value to original input
+        editInputPenerimaan.value = value;
+        
+        // Format value for display
+        const formattedValue = formatEditRupiah(value);
+        
+        // Calculate length change before and after formatting
+        const lengthDiff = formattedValue.length - this.value.length;
+        
+        // Update displayed value
+        this.value = formattedValue;
+        
+        // Reset cursor position considering length change
+        this.setSelectionRange(cursorPos + lengthDiff, cursorPos + lengthDiff);
+    });
+    
+    // Add event listener to update month and year when date changes
+    const editTanggalInput = document.getElementById('edit_tanggal');
+    const editBulanSelect = document.getElementById('edit_bulan');
+    const editTahunInput = document.getElementById('edit_tahun');
+    
+    if (editTanggalInput && editBulanSelect && editTahunInput) {
+        editTanggalInput.addEventListener('change', function() {
+            const tanggal = new Date(this.value);
+            const bulanIndex = tanggal.getMonth(); // 0-11
+            const tahun = tanggal.getFullYear();
+            
+            // Update bulan dropdown berdasarkan tanggal
+            editBulanSelect.selectedIndex = bulanIndex;
+            
+            // Update input tahun
+            editTahunInput.value = tahun;
+        });
+    }
+}
 </script>
 
 <script>
