@@ -744,46 +744,54 @@ document.addEventListener('DOMContentLoaded', function() {
        
 
         <!-- Filter untuk Total Pengeluaran -->
-        <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
-        <h3 class="text-lg font-bold mb-4">Filter Data Pengeluaran</h3>
-            <form id="filterForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label for="bulanFilter" class="block text-sm font-medium text-gray-700">Bulan:</label>
-                    <select name="bulan" id="bulanFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                        <option value="" disabled selected>Pilih Bulan</option>
-                        @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $month)
-                            <option value="{{ $month }}">{{ $month }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label for="statusFilter" class="block text-sm font-medium text-gray-700">Status:</label>
-                    <select name="status" id="statusFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                        <option value="" disabled selected>Pilih Status</option>
-                        <option value="Sudah Disahkan">Sudah Disahkan</option>
-                        <option value="Belum Disahkan">Belum Disahkan</option>
-                    </select>
-                </div>
-            </form>
+<div class="mt-6 bg-white p-6 rounded-lg shadow-md">
+    <h3 class="text-lg font-bold mb-4">Filter Data Pengeluaran</h3>
+    <form id="filterForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label for="bulanFilter" class="block text-sm font-medium text-gray-700">Bulan:</label>
+            <select name="bulan" id="bulanFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Semua Bulan</option>
+                @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $month)
+                    <option value="{{ $month }}">{{ $month }}</option>
+                @endforeach
+            </select>
         </div>
+        <div>
+            <label for="tahunFilter" class="block text-sm font-medium text-gray-700">Tahun:</label>
+            <select name="tahun" id="tahunFilter" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Semua Tahun</option>
+                @php
+                    $currentYear = date('Y');
+                    $years = range($currentYear - 1, $currentYear + 5);
+                @endphp
+                @foreach($years as $year)
+                    <option value="{{ $year }}" {{ $year == $currentYear ? 'selected' : '' }}>{{ $year }}</option>
+                @endforeach
+            </select>
+        </div>
+    </form>
+</div>
+
 
         <!-- Tabel Total Pengeluaran (dengan filter) -->
-        <div id="filteredTable" class="bg-white shadow-md rounded-lg p-6">
-            <h3 class="text-lg font-bold mb-4">Data Total Berdasarkan Filter</h3>
-            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
-                <thead class="bg-gray-200">
-                    <tr>
-                        <th>Bulan</th>
-                        <th>Rekening</th>
-                        <th>Pengeluaran</th>
-                    </tr>
-                </thead>
-                <tbody id="filteredTableBody">
-                    <!-- Konten akan diperbarui melalui AJAX -->
-                </tbody>
-            </table>
-        </div>
-    </div>
+<div id="filteredTable" class="mt-6 bg-white shadow-md rounded-lg p-6">
+    <h3 class="text-lg font-bold mb-4">Data Pengeluaran Berdasarkan Filter</h3>
+    <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <thead class="bg-gray-200 text-gray-600">
+            <tr>
+                <th class="py-2 px-4 text-left border-b border-gray-300">Tanggal</th>
+                <th class="py-2 px-4 text-left border-b border-gray-300">Bulan</th>
+                <th class="py-2 px-4 text-left border-b border-gray-300">Tahun</th>
+                <th class="py-2 px-4 text-left border-b border-gray-300">Rekening</th>
+                <th class="py-2 px-4 text-left border-b border-gray-300">Pengeluaran</th>
+                <th class="py-2 px-4 text-left border-b border-gray-300">Keterangan</th>
+            </tr>
+        </thead>
+        <tbody id="filteredTableBody" class="divide-y divide-gray-200">
+            <!-- Konten akan diperbarui melalui AJAX -->
+        </tbody>
+    </table>
+</div>
 
      <!-- Total Pengeluaran -->
      <div class="mt-4">
@@ -797,26 +805,39 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
+        // Fungsi untuk memformat angka dengan titik sebagai pemisah ribuan
+        function formatNumber(number) {
+            return new Intl.NumberFormat('id-ID').format(number);
+        }
+        
         // Fungsi untuk memperbarui tabel total pengeluaran
         function updateTotalPengeluaran() {
             let bulan = $('#bulanFilter').val();
-            let status = $('#statusFilter').val();
+            let tahun = $('#tahunFilter').val();
 
             $.ajax({
-                url: "{{ route('pengeluaran.dashboard') }}", // Pastikan URL ini mengarah ke route pengeluaran
+                url: "{{ route('pengeluaran.dashboard') }}",
                 method: "GET",
-                data: { bulan: bulan, status: status },
+                data: { bulan: bulan, tahun: tahun, status: 'Sudah Disahkan' },
                 success: function (response) {
                     $('#filteredTableBody').empty(); // Kosongkan tabel
-                    $('#totalPengeluaran').text(response.totalPengeluaran.toLocaleString('id-ID')); // Update total
+                    $('#totalPengeluaran').text(formatNumber(response.totalPengeluaran)); // Update total
 
                     // Masukkan data baru ke tabel filteredTable
                     response.filteredData.forEach(function (item) {
+                        // Dapatkan keterangan berdasarkan kode COA
+                        const coa = item.keterangan || '';
+                        const keteranganText = coaDictionary[coa] || 'Keterangan tidak ditemukan';
+                        const tanggal = item.tanggal || '-';
+                        
                         $('#filteredTableBody').append(`
                             <tr>
-                                <td>${item.bulan}</td>
-                                <td>${item.rekening}</td>
-                                <td>${item.jumlah_pengeluaran.toLocaleString('id-ID')}</td>
+                                <td class="py-2 px-4">${tanggal}</td>
+                                <td class="py-2 px-4">${item.bulan}</td>
+                                <td class="py-2 px-4">${item.tahun}</td>
+                                <td class="py-2 px-4">${item.rekening}</td>
+                                <td class="py-2 px-4">${formatNumber(item.jumlah_pengeluaran)}</td>
+                                <td class="py-2 px-4">${keteranganText}</td>
                             </tr>
                         `);
                     });
@@ -828,7 +849,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Event listener untuk filter dropdown
-        $('#bulanFilter, #statusFilter').change(updateTotalPengeluaran);
+        $('#bulanFilter, #tahunFilter').change(updateTotalPengeluaran);
 
         // Panggil fungsi pertama kali
         updateTotalPengeluaran();

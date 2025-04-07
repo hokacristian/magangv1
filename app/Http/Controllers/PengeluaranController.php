@@ -28,9 +28,15 @@ class PengeluaranController extends Controller
             $filteredData = $filteredData->where('bulan', $bulan);
         }
         
-        $filteredData = $filteredData->where('tahun', $tahun)
-            ->where('status', $status)
-            ->get();
+        if ($tahun) {
+            $filteredData = $filteredData->where('tahun', $tahun);
+        }
+        
+        if ($status) {
+            $filteredData = $filteredData->where('status', $status);
+        }
+        
+        $filteredData = $filteredData->get();
 
         // Filter "Belum Disahkan"
         $belumDisahkan = Pengeluaran::with('rekening')
@@ -46,11 +52,12 @@ class PengeluaranController extends Controller
             return response()->json([
                 'filteredData' => $filteredData->map(function ($item) {
                     return [
-                        'bulan' => $item->bulan,
                         'tanggal' => $item->tanggal ? date('d-m-Y', strtotime($item->tanggal)) : '-',
+                        'bulan' => $item->bulan,
                         'tahun' => $item->tahun,
                         'rekening' => $item->rekening->rekening . ' - ' . $item->rekening->bank,
                         'jumlah_pengeluaran' => $item->jumlah_pengeluaran,
+                        'keterangan' => $item->keterangan,
                     ];
                 }),
                 'totalPengeluaran' => $totalPengeluaran

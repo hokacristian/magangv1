@@ -27,7 +27,8 @@ Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':direktu
 // Middleware untuk role: katim
 Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':katim'])->group(function () {
     Route::get('/katim/dashboard', [KatimController::class, 'index'])->name('katim.dashboard');
-    Route::post('/katim/rekonsiliasi', [KatimController::class, 'filterRekonsiliasi'])->name('katim.rekonsiliasi');
+    Route::match(['get', 'post'], '/katim/rekonsiliasi', [KatimController::class, 'filterRekonsiliasi'])->name('katim.rekonsiliasi');
+    Route::get('/katim/transaksi-detail', [KatimController::class, 'getTransaksiDetail'])->name('katim.getTransaksiDetail');
     Route::post('/katim/preview-pdf', [KatimController::class, 'previewPDF'])->name('katim.preview-pdf');
     Route::post('/katim/download-pdf', [KatimController::class, 'downloadPDF'])->name('katim.download-pdf');
 });

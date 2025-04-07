@@ -44,10 +44,10 @@
 <body>
     <h1>BERITA ACARA REKONSILIASI</h1>
     <h2>PEMERIKSAAN KAS SALDO REKENING BENDAHARA BLU</h2>
-    <h2>BULAN {{ strtoupper($bulan) }} 2024</h2>
+    <h2>BULAN {{ strtoupper($bulan) }} {{ $tahun }}</h2>
     <h3>POLITEKNIK KESEHATAN KEMENKES MANADO</h3>
 
-    <p>Pada hari ini tanggal Tiga puluh satu bulan {{ $bulan }} tahun 2024 telah dilakukan <strong>Rekonsiliasi Data Saldo Rekening BLU</strong> untuk periode data rekening sampai dengan 31 {{ $bulan }} 2024 sebagai berikut:</p>
+    <p>Pada hari ini bulan {{ $bulan }} {{ $tahun }} telah dilakukan <strong>Rekonsiliasi Data Saldo Rekening BLU</strong> sebagai berikut:</p>
 
     <table>
         <thead>
@@ -100,11 +100,14 @@
         @endif
 
         @if(auth()->user()->hasRole('katim'))
-            <form action="{{ route('katim.download-pdf') }}" method="POST">
-                @csrf
-                <input type="hidden" name="bulan" value="{{ $bulan }}">
-                <button type="submit">Download PDF (Katim)</button>
-            </form>
+        <form action="{{ route('katim.download-pdf') }}" method="POST" class="inline">
+    @csrf
+    <input type="hidden" name="bulan" value="{{ $bulan }}">
+    <input type="hidden" name="tahun" value="{{ $tahun }}">
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+        Download PDF
+    </button>
+</form>
         @endif
     </div>
 @endif
