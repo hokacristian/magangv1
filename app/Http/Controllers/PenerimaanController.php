@@ -12,62 +12,69 @@ use Illuminate\Support\Facades\DB; // Tambahkan impor ini
 class PenerimaanController extends Controller
 {
     public function index(Request $request)
-    {
-        // Filter request
-        $bulan = $request->get('bulan');
-        $tahun = $request->get('tahun', date('Y')); // Default tahun saat ini
-        $status = $request->get('status', 'Sudah Disahkan');
+{
+    // Filter request
+    $bulan = $request->get('bulan');
+    $tahun = $request->get('tahun', date('Y')); // Default tahun saat ini jika tidak diisi
+    $status = $request->get('status', 'Sudah Disahkan'); // Default status "Sudah Disahkan"
 
-        // Ambil semua data rekening
-        $rekenings = Rekening::all();
+    // Ambil semua data rekening
+    $rekenings = Rekening::all();
 
-        // Ambil data penerimaan
-        $penerimaans = Penerimaan::with('rekening')->orderBy('tanggal', 'desc')->get();
+    // Ambil data penerimaan
+    $penerimaans = Penerimaan::with('rekening')->orderBy('tanggal', 'desc')->get();
 
-        // Data berdasarkan filter
-        $filteredData = Penerimaan::with('rekening');
-        
-        if ($bulan) {
-            $filteredData = $filteredData->where('bulan', $bulan);
-        }
-        
-        $filteredData = $filteredData->where('tahun', $tahun)
-            ->where('status', $status)
-            ->get();
-
-        // Filter "Belum Disahkan"
-        $belumDisahkan = Penerimaan::with('rekening')
-            ->where('status', 'Belum Disahkan')
-            ->orderBy('tanggal', 'desc')
-            ->get();
-
-        // Hitung total pendapatan
-        $totalPendapatan = $filteredData->sum('penerimaan');
-
-        // Jika request AJAX untuk filter
-        if ($request->ajax()) {
-            return response()->json([
-                'filteredData' => $filteredData->map(function ($item) {
-                    return [
-                        'bulan' => $item->bulan,
-                        'tanggal' => $item->tanggal ? date('d-m-Y', strtotime($item->tanggal)) : '-',
-                        'tahun' => $item->tahun,
-                        'rekening' => $item->rekening->rekening . ' - ' . $item->rekening->bank,
-                        'penerimaan' => $item->penerimaan,
-                    ];
-                }),
-                'totalPendapatan' => $totalPendapatan
-            ]);
-        }
-
-        // Return ke view
-        return view('dashboard.penerimaan', compact(
-            'rekenings', 
-            'penerimaans', 
-            'belumDisahkan', 
-            'totalPendapatan'
-        ));
+    // Data berdasarkan filter
+    $filteredData = Penerimaan::with('rekening');
+    
+    if ($bulan) {
+        $filteredData = $filteredData->where('bulan', $bulan);
     }
+    
+    if ($tahun) {
+        $filteredData = $filteredData->where('tahun', $tahun);
+    }
+    
+    if ($status) {
+        $filteredData = $filteredData->where('status', $status);
+    }
+    
+    $filteredData = $filteredData->get();
+
+    // Filter "Belum Disahkan"
+    $belumDisahkan = Penerimaan::with('rekening')
+        ->where('status', 'Belum Disahkan')
+        ->orderBy('tanggal', 'desc')
+        ->get();
+
+    // Hitung total pendapatan
+    $totalPendapatan = $filteredData->sum('penerimaan');
+
+    // Modifikasi pada bagian ini di controller
+if ($request->ajax()) {
+    return response()->json([
+        'filteredData' => $filteredData->map(function ($item) {
+            return [
+                'bulan' => $item->bulan,
+                'tahun' => $item->tahun,
+                'tanggal' => $item->tanggal ? date('d-m-Y', strtotime($item->tanggal)) : '-',
+                'rekening' => $item->rekening->rekening . ' - ' . $item->rekening->bank,
+                'penerimaan' => $item->penerimaan,
+                'keterangan' => $item->keterangan, // Tambahkan ini
+            ];
+        }),
+        'totalPendapatan' => $totalPendapatan
+    ]);
+}
+
+    // Return ke view
+    return view('dashboard.penerimaan', compact(
+        'rekenings', 
+        'penerimaans', 
+        'belumDisahkan', 
+        'totalPendapatan'
+    ));
+}
 
     public function store(Request $request)
     {

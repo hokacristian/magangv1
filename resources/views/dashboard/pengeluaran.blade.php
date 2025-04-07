@@ -740,39 +740,8 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- BELUM DISAHKAN -->
-        <div class="bg-white shadow-md rounded-lg p-6 mb-8">
-            <h2 class="text-xl font-bold mb-4 text-red-600">Belum Disahkan</h2>
-            <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
-                <thead class="bg-gray-200 text-gray-600">
-                    <tr>
-                        <th class="py-2 px-4">Bulan</th>
-                        <th class="py-2 px-4">Rekening</th>
-                        <th class="py-2 px-4">Saldo Awal</th>
-                        <th class="py-2 px-4">Jumlah Pengeluaran</th>
-                        <th class="py-2 px-4">Keterangan</th>
-                        <th class="py-2 px-4">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($belumDisahkan as $data)
-                        <tr class="border-t border-gray-200">
-                            <td class="py-2 px-4">{{ $data->bulan }}</td>
-                            <td class="py-2 px-4">{{ $data->rekening->rekening }} - {{ $data->rekening->bank }}</td>
-                            <td class="py-2 px-4">{{ number_format($data->saldo_awal, 2) }}</td>
-                            <td class="py-2 px-4">{{ number_format($data->jumlah_pengeluaran, 2) }}</td>
-                            <td class="py-2 px-4">{{ $data->keterangan }}</td>
-                            <td class="py-2 px-4">{{ $data->status }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <!-- Total Pengeluaran -->
-        <div class="mt-4">
-            <div class="bg-blue-600 text-white p-6 rounded-lg shadow-md flex justify-between items-center">
-                <h3 class="text-lg font-bold">Total Pengeluaran: Rp <span id="totalPengeluaran">{{ number_format($totalPengeluaran, 2) }}</span></h3>
-            </div>
-        </div>
+        
+       
 
         <!-- Filter untuk Total Pengeluaran -->
         <div class="mt-6 bg-white p-6 rounded-lg shadow-md">
@@ -815,6 +784,13 @@ document.addEventListener('DOMContentLoaded', function() {
             </table>
         </div>
     </div>
+
+     <!-- Total Pengeluaran -->
+     <div class="mt-4">
+            <div class="bg-blue-600 text-white p-6 rounded-lg shadow-md flex justify-between items-center">
+                <h3 class="text-lg font-bold">Total Pengeluaran: Rp <span id="totalPengeluaran">{{ number_format($totalPengeluaran, 2) }}</span></h3>
+            </div>
+        </div>
 
 
 
