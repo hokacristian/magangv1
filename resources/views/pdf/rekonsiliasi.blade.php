@@ -95,7 +95,8 @@
             <form action="{{ route('direktur.download-pdf') }}" method="POST">
                 @csrf
                 <input type="hidden" name="bulan" value="{{ $bulan }}">
-                <button type="submit">Download PDF (Direktur)</button>
+    <input type="hidden" name="tahun" value="{{ $tahun }}">
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
             </form>
         @endif
 

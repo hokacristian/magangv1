@@ -17,7 +17,8 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name
 // Middleware untuk role: direktur
 Route::middleware(['auth', App\Http\Middleware\RoleMiddleware::class . ':direktur'])->group(function () {
     Route::get('/direktur/dashboard', [DirekturController::class, 'index'])->name('direktur.dashboard');
-    Route::post('/direktur/rekonsiliasi', [DirekturController::class, 'filterRekonsiliasi'])->name('direktur.rekonsiliasi');
+    Route::match(['get', 'post'], '/direktur/rekonsiliasi', [KatimController::class, 'filterRekonsiliasi'])->name('direktur.rekonsiliasi');
+    Route::get('/direktur/transaksi-detail', [KatimController::class, 'getTransaksiDetail'])->name('direktur.getTransaksiDetail');
     Route::post('/direktur/preview-pdf', [DirekturController::class, 'previewPDF'])->name('direktur.preview-pdf');
     Route::post('/direktur/download-pdf', [DirekturController::class, 'downloadPDF'])->name('direktur.download-pdf');
 

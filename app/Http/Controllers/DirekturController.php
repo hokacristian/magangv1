@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Rekening;
@@ -14,7 +13,7 @@ class DirekturController extends Controller
     {
         $bulan = $request->input('bulan', null); // Bulan dipilih atau default null
     
-        // Query Total Penerimaan (hanya "Sudah Disahkan")
+       // Query Total Penerimaan (hanya "Sudah Disahkan")
 $totalPenerimaan = Penerimaan::selectRaw('rekening_id, sum(penerimaan) as total_penerimaan, status')
 ->where('status', 'Sudah Disahkan')  // Filter hanya yang sudah disahkan
 ->when($bulan, function ($query, $bulan) {
@@ -48,10 +47,12 @@ $grandTotalPengeluaran = $totalPengeluaran->sum('total_pengeluaran');
     public function filterRekonsiliasi(Request $request)
     {
         $request->validate([
-            'bulan' => 'required|string'
+            'bulan' => 'required|string',
+            'tahun' => 'required|numeric'
         ]);
 
         $bulan = $request->bulan;
+        $tahun = $request->tahun;
 
         // Ambil semua rekening
         $rekenings = Rekening::all();
@@ -70,6 +71,7 @@ $grandTotalPengeluaran = $totalPengeluaran->sum('total_pengeluaran');
             // Asumsi: saldo_awal dapat diambil dari salah satu record penerimaan bulan tersebut.
             $penerimaanBulan = Penerimaan::where('rekening_id', $rekening->id)
                 ->where('bulan', $bulan)
+                ->where('tahun', $tahun) // Tambah filter tahun
                 ->orderBy('id', 'asc')
                 ->get();
 
@@ -82,24 +84,28 @@ $grandTotalPengeluaran = $totalPengeluaran->sum('total_pengeluaran');
             // Total penerimaan "Sudah Disahkan" untuk rekening dan bulan ini
             $penerimaanDisahkan = Penerimaan::where('rekening_id', $rekening->id)
                 ->where('bulan', $bulan)
+                ->where('tahun', $tahun) // Tambah filter tahun
                 ->where('status', 'Sudah Disahkan')
                 ->sum('penerimaan');
 
             // Total penerimaan "Belum Disahkan" untuk rekening dan bulan ini (untuk laporan di bawah)
             $penerimaanBelumDisahkan = Penerimaan::where('rekening_id', $rekening->id)
                 ->where('bulan', $bulan)
+                ->where('tahun', $tahun) // Tambah filter tahun
                 ->where('status', 'Belum Disahkan')
                 ->sum('penerimaan');
 
             // Total pengeluaran "Sudah Disahkan"
             $pengeluaranDisahkan = Pengeluaran::where('rekening_id', $rekening->id)
                 ->where('bulan', $bulan)
+                ->where('tahun', $tahun) // Tambah filter tahun
                 ->where('status', 'Sudah Disahkan')
                 ->sum('jumlah_pengeluaran');
 
             // Total pengeluaran "Belum Disahkan"
             $pengeluaranBelumDisahkan = Pengeluaran::where('rekening_id', $rekening->id)
                 ->where('bulan', $bulan)
+                ->where('tahun', $tahun) // Tambah filter tahun
                 ->where('status', 'Belum Disahkan')
                 ->sum('jumlah_pengeluaran');
 
@@ -133,6 +139,7 @@ $grandTotalPengeluaran = $totalPengeluaran->sum('total_pengeluaran');
         // Data yang akan dikirim ke view/pdf
         $data = [
             'bulan' => $bulan,
+            'tahun' => $tahun,
             'dataRekening' => $dataRekening,
             'saldoAkhirBLU' => $totalSaldoAkhirSemua,
             'pengesahanPendapatan' => $totalPenerimaanDisahkan,
@@ -146,7 +153,7 @@ $grandTotalPengeluaran = $totalPengeluaran->sum('total_pengeluaran');
         return view('pdf.rekonsiliasi', $data);
     }
 
-    private function generateRekonsiliasiData($bulan)
+    private function generateRekonsiliasiData($bulan,$tahun)
 {
     // Ambil semua rekening
     $rekenings = Rekening::all();
@@ -162,6 +169,7 @@ $grandTotalPengeluaran = $totalPengeluaran->sum('total_pengeluaran');
     foreach ($rekenings as $rekening) {
         $penerimaanBulan = Penerimaan::where('rekening_id', $rekening->id)
             ->where('bulan', $bulan)
+            ->where('tahun', $tahun) // Tambah filter tahun
             ->orderBy('id', 'asc')
             ->get();
 
@@ -169,11 +177,13 @@ $grandTotalPengeluaran = $totalPengeluaran->sum('total_pengeluaran');
 
         $penerimaanDisahkan = Penerimaan::where('rekening_id', $rekening->id)
             ->where('bulan', $bulan)
+            ->where('tahun', $tahun) // Tambah filter tahun
             ->where('status', 'Sudah Disahkan')
             ->sum('penerimaan');
 
         $pengeluaranDisahkan = Pengeluaran::where('rekening_id', $rekening->id)
             ->where('bulan', $bulan)
+            ->where('tahun', $tahun) // Tambah filter tahun
             ->where('status', 'Sudah Disahkan')
             ->sum('jumlah_pengeluaran');
 
@@ -197,6 +207,7 @@ $grandTotalPengeluaran = $totalPengeluaran->sum('total_pengeluaran');
 
     return [
         'bulan' => $bulan,
+        'tahun' => $tahun,
         'dataRekening' => $dataRekening,
         'saldoAkhirBLU' => $totalSaldoAkhirSemua,
         'pengesahanPendapatan' => $totalPenerimaanDisahkan,
@@ -211,13 +222,17 @@ $grandTotalPengeluaran = $totalPengeluaran->sum('total_pengeluaran');
 public function downloadPDF(Request $request)
 {
     $request->validate([
-        'bulan' => 'required|string'
+        'bulan' => 'required|string',
+        'tahun' => 'required|numeric'
     ]);
 
     $bulan = $request->bulan;
+    $tahun = $request->tahun;
+    $tanggalUnduh = date('d-m-Y'); // Tanggal hari ini
+
 
     // Ambil data rekonsiliasi
-    $data = $this->generateRekonsiliasiData($bulan);
+    $data = $this->generateRekonsiliasiData($bulan, $tahun);
 
     // Tambahkan flag untuk membedakan mode PDF
     $data['isDownload'] = true;
@@ -225,8 +240,11 @@ public function downloadPDF(Request $request)
     // Load view ke PDF
     $pdf = PDF::loadView('pdf.rekonsiliasi', $data)->setPaper('a4', 'landscape');
 
-    // Unduh PDF
-    return $pdf->download("Rekonsiliasi_Saldo_BLU_$bulan.pdf");
+     // Format nama file sesuai permintaan
+     $filename = "Laporan_{$bulan}_{$tahun}_Tanggal Unduh_{$tanggalUnduh}.pdf";
+
+     // Unduh PDF
+     return $pdf->download($filename);
 }
 
 
@@ -234,18 +252,181 @@ public function downloadPDF(Request $request)
     public function previewPDF(Request $request)
 {
     $request->validate([
-        'bulan' => 'required|string'
+        'bulan' => 'required|string',
+        'tahun' => 'required|numeric'
     ]);
 
     $bulan = $request->bulan;
+    $tahun = $request->tahun;
 
     // Panggil logika generateRekonsiliasiData untuk mengambil data
-    $data = $this->generateRekonsiliasiData($bulan);
+    $data = $this->generateRekonsiliasiData($bulan, $tahun);
 
     // Load view ke PDF
     $pdf = PDF::loadView('pdf.rekonsiliasi', $data);
 
+    // Format nama file untuk preview
+    $filename = "Laporan_{$bulan}_{$tahun}_{$tanggalUnduh}.pdf";
+
     // Return PDF untuk preview di browser
-    return $pdf->stream("Rekonsiliasi_Saldo_BLU_$bulan.pdf");
+    return $pdf->stream($filename);
 }
+
+// Di KatimController.php tambahkan metode berikut
+public function getTransaksiDetail(Request $request)
+{
+    $bulan = $request->get('bulan');
+    $tahun = $request->get('tahun', date('Y'));
+    
+    // Query untuk mendapatkan transaksi penerimaan
+    $penerimaans = Penerimaan::with(['rekening'])
+        ->where('status', 'Sudah Disahkan')
+        ->when($bulan, function ($query) use ($bulan) {
+            return $query->where('bulan', $bulan);
+        })
+        ->when($tahun, function ($query) use ($tahun) {
+            return $query->where('tahun', $tahun);
+        })
+        ->get()
+        ->map(function ($item) {
+            // Dapatkan deskripsi keterangan berdasarkan kode COA
+            $coaDescription = $this->getCoaDescription($item->keterangan);
+            
+            return [
+                'tanggal' => $item->tanggal, // Simpan tanggal dalam format asli untuk pengurutan
+                'tanggal_format' => date('d/m/Y', strtotime($item->tanggal)), // Format untuk tampilan
+                'rekening' => $item->rekening->rekening . ' - ' . $item->rekening->bank,
+                'keterangan' => $coaDescription,
+                'jumlah' => (float)$item->penerimaan, // Pastikan jumlah adalah float
+                'jenis' => 'penerimaan'
+            ];
+        });
+    
+     // Query untuk mendapatkan transaksi pengeluaran
+     $pengeluarans = Pengeluaran::with(['rekening'])
+     ->where('status', 'Sudah Disahkan')
+     ->when($bulan, function ($query) use ($bulan) {
+         return $query->where('bulan', $bulan);
+     })
+     ->when($tahun, function ($query) use ($tahun) {
+         return $query->where('tahun', $tahun);
+     })
+     ->get()
+     ->map(function ($item) {
+         // Dapatkan deskripsi keterangan berdasarkan kode COA
+         $coaDescription = $this->getCoaDescription($item->keterangan);
+         
+         return [
+             'tanggal' => $item->tanggal, // Simpan tanggal dalam format asli untuk pengurutan
+             'tanggal_format' => date('d/m/Y', strtotime($item->tanggal)), // Format untuk tampilan
+             'rekening' => $item->rekening->rekening . ' - ' . $item->rekening->bank,
+             'keterangan' => $coaDescription,
+             'jumlah' => (float)$item->jumlah_pengeluaran, // Pastikan jumlah adalah float
+             'jenis' => 'pengeluaran'
+         ];
+     });
+    
+    // Gabungkan penerimaan dan pengeluaran
+    $transaksi = $penerimaans->concat($pengeluarans)
+        ->sortBy('tanggal') // Urutkan berdasarkan tanggal
+        ->values()
+        ->toArray();
+    
+    // Dapatkan saldo awal
+    $rekenings = Rekening::all();
+    $saldoAwal = $rekenings->sum('saldo_awal');
+    
+    // Hitung total
+    $totalPenerimaan = $penerimaans->sum('jumlah');
+    $totalPengeluaran = $pengeluarans->sum('jumlah');
+    
+    return response()->json([
+        'transaksi' => $transaksi,
+        'saldoAwal' => $saldoAwal,
+        'totalPenerimaan' => $totalPenerimaan,
+        'totalPengeluaran' => $totalPengeluaran
+    ]);
+
+     // Gabungkan penerimaan dan pengeluaran
+     $transaksi = $penerimaans->concat($pengeluarans)
+     ->sortBy('tanggal') // Urutkan berdasarkan tanggal
+     ->values()
+     ->toArray();
+ 
+ // Dapatkan saldo awal
+ $rekenings = Rekening::all();
+ $saldoAwal = (float)$rekenings->sum('saldo_awal');
+ 
+ // Hitung total
+ $totalPenerimaan = (float)$penerimaans->sum('jumlah');
+ $totalPengeluaran = (float)$pengeluarans->sum('jumlah');
+ 
+ return response()->json([
+     'transaksi' => $transaksi,
+     'saldoAwal' => $saldoAwal,
+     'totalPenerimaan' => $totalPenerimaan,
+     'totalPengeluaran' => $totalPengeluaran
+ ]);
+}
+
+
+// Fungsi helper untuk mendapatkan deskripsi COA
+private function getCoaDescription($code)
+{
+    $coaDictionary = [
+        // Kode penerimaan
+        "4100" => "Pendapatan Operasional",
+        "4101" => "Pendapatan SPP & UKT",
+        "4102" => "Pendapatan Registrasi & Her-Registrasi",
+        "4103" => "Pendapatan Ujian Kompetensi",
+        "4104" => "Pendapatan Wisuda & Ijazah",
+        "4105" => "Pendapatan Sertifikasi & Pelatihan",
+        "4200" => "Pendapatan Non-Operasional",
+        "4201" => "Pendapatan dari Sewa Fasilitas",
+        "4202" => "Pendapatan Penelitian & Hibah",
+        "4203" => "Pendapatan Workshop & Seminar",
+        "4204" => "Pendapatan dari Kegiatan Mahasiswa",
+        "4205" => "Pendapatan Bunga Bank",
+        "4300" => "Pendapatan Lain-lain",
+        "4301" => "Pendapatan dari Donasi & CSR",
+        "4302" => "Pendapatan dari Kerjasama Institusi",
+        "4303" => "Pendapatan dari Penjualan Barang/Merchandise",
+        "4304" => "Pendapatan dari Kegiatan Sosial",
+        
+        // Kode pengeluaran
+        "5100" => "Beban Pegawai & Tenaga Pendidik",
+        "5101" => "Gaji Dosen & Tunjangan Sertifikasi",
+        "5102" => "Gaji Tenaga Kependidikan",
+        "5103" => "Honorarium Dosen Luar Biasa",
+        "5104" => "BPJS Kesehatan & Ketenagakerjaan",
+        "5105" => "Biaya Pelatihan dan Pengembangan SDM",
+        "5200" => "Beban Operasional Pendidikan",
+        "5201" => "Pembelian Alat Tulis Kantor (ATK)",
+        "5202" => "Biaya Listrik, Air, dan Internet",
+        "5203" => "Pemeliharaan Gedung dan Peralatan",
+        "5204" => "Biaya Transportasi dan Perjalanan Dinas",
+        "5205" => "Biaya Konsumsi dan Rapat",
+        "5300" => "Beban Akademik & Penelitian",
+        "5301" => "Biaya Praktikum Mahasiswa",
+        "5302" => "Biaya Pengadaan Bahan Lab & Simulasi",
+        "5303" => "Biaya Penelitian Dosen dan Mahasiswa",
+        "5304" => "Biaya Publikasi Ilmiah dan Seminar",
+        "5305" => "Biaya Akreditasi & Sertifikasi Program Studi",
+        "5400" => "Beban Mahasiswa & Kegiatan Kemahasiswaan",
+        "5401" => "Biaya Organisasi Mahasiswa (BEM, HIMA)",
+        "5402" => "Biaya Kegiatan UKM & Kesejahteraan Mahasiswa",
+        "5403" => "Bantuan & Beasiswa Mahasiswa",
+        "5404" => "Biaya Kegiatan Wisuda",
+        "5405" => "Bantuan Kesehatan dan Sosial Mahasiswa",
+        "5500" => "Beban Lain-lain",
+        "5501" => "Biaya Penyusutan Aset",
+        "5502" => "Pajak & Retribusi",
+        "5503" => "Biaya Pengelolaan Sampah dan Limbah Medis",
+        "5504" => "Biaya CSR & Kegiatan Sosial",
+        "5505" => "Biaya Lain-lain Tak Terduga"
+    ];
+    
+    return $coaDictionary[$code] ?? $code;
+}
+
 }
