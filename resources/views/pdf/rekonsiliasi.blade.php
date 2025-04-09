@@ -97,7 +97,8 @@
                 <input type="hidden" name="bulan" value="{{ $bulan }}">
     <input type="hidden" name="tahun" value="{{ $tahun }}">
     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-            </form>
+        Download PDF
+    </button>
         @endif
 
         @if(auth()->user()->hasRole('katim'))
